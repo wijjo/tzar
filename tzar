@@ -1,0 +1,11 @@
+#!/usr/bin/env jiig-run
+
+"""
+Tzar archive manager.
+
+Jiig-based tool to create and manage archives of the working folder.
+"""
+
+DESCRIPTION = 'Simple archive manager.'
+
+from tzar.tasks import hello, save     # noqa
