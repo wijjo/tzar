@@ -7,4 +7,4 @@
 VENV_ROOT = 'venv'
 
 # Package names to install into the virtual environment using its "pip" command.
-#PIP_PACKAGES = []
+PIP_PACKAGES = []

@@ -6,6 +6,13 @@ Tzar archive manager.
 Jiig-based tool to create and manage archives of the working folder.
 """
 
-DESCRIPTION = 'Simple archive manager.'
+import jiig
 
-from tzar.tasks import hello, save     # noqa
+jiig.options(
+    name='tzar',
+    description='Simple archive manager.',
+)
+
+from tzar.methods import gz, sync, xz, zip  # noqa
+from jiig.tasks import alias, help, venv    # noqa
+from tzar.tasks import save                 # noqa

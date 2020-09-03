@@ -1,3 +1,2 @@
 DEFAULT_EXCLUDE = ['tmp/']
-DEFAULT_TARGET_FOLDER = '..'
-DEFAULT_TARGET_SUFFIX = '-%y%m%d%H%M%S'
+DEFAULT_TARGET = '../{name}-%y%m%d%H%M%S'
