@@ -25,6 +25,11 @@ from tzar.archiver import create_archiver, get_method_names, DEFAULT_METHOD
             'default': DEFAULT_METHOD,
             'help': f'archive method (default: "{DEFAULT_METHOD}")',
         },
+        ('-p', '--progress'): {
+            'dest': 'PROGRESS',
+            'action': 'store_true',
+            'help': 'display progress bar'
+        },
         ('-t', '--target'): {
             'dest': 'TARGET',
             'default': constants.DEFAULT_TARGET,
@@ -62,7 +67,9 @@ def task_save(runner: TaskRunner):
             absolute_target_path = os.path.abspath(relative_target_path)
             utility.create_folder(os.path.dirname(absolute_target_path))
             archiver.save(file_iterator_factory.create_iterator(source_folder),
-                          absolute_target_path)
+                          absolute_target_path,
+                          verbose=runner.verbose,
+                          progress=runner.args.PROGRESS)
 
 
 def _iterate_folders(source_folders: List[Text]) -> Iterator[Text]:

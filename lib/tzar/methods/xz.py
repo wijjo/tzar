@@ -8,5 +8,9 @@ from tzar.archiver import archive_method
 
 @archive_method('xz')
 class ArchiveMethodXZ(ArchiveMethodBase):
-    def save(self, source_paths: Iterator[Text], target_path: Text):
+    def save(self,
+             source_paths: Iterator[Text],
+             target_path: Text,
+             verbose: bool = False,
+             progress: bool = False):
         pass

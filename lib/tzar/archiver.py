@@ -18,13 +18,20 @@ class Archiver:
         self.method_name = method_name
         self.dry_run = dry_run
 
-    def save(self, source_paths: Iterator[Text], target_path: Text):
+    def save(self,
+             source_paths: Iterator[Text],
+             target_path: Text,
+             verbose: bool = False,
+             progress: bool = False):
         if self.dry_run:
             log_message(f'Saving archive "{target_path}" (dry run):')
             for path in source_paths:
                 log_message(f'  {path}')
         else:
-            self._method.save(source_paths, target_path)
+            self._method.save(source_paths,
+                              target_path,
+                              verbose=verbose,
+                              progress=progress)
 
 
 def archive_method(name: Text, is_default: bool = False) -> Callable:
