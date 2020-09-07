@@ -2,11 +2,15 @@
 
 import os
 from tempfile import NamedTemporaryFile
-from typing import Text, Iterator, List, Union, Optional
+from typing import Text, Iterator
 
-from jiig.utility import log_message, log_warning, run, find_system_program, abort
-from .base import ArchiveMethodBase
+from jiig.utility.console import abort, log_message, log_warning
+from jiig.utility.process import run
+from jiig.utility.filesystem import find_system_program
+
 from tzar.archiver import archive_method
+
+from .base import ArchiveMethodBase
 
 
 @archive_method('gz', is_default=True)

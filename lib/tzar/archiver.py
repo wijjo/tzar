@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Text, Iterator, Dict, Type, List, Optional, Callable
 
-from jiig.utility import log_message
+from jiig.utility.console import log_message
 from tzar.methods.base import ArchiveMethodBase
 
 METHOD_MAP: Dict[Text, Type[ArchiveMethodBase]] = {}
