@@ -1,2 +1,2 @@
 DEFAULT_EXCLUDE = ['tmp/']
-DEFAULT_TARGET = '../{name}-%y%m%d%H%M%S'
+DEFAULT_TARGET = '../{name}_%Y-%m-%d.%H.%M.%S'

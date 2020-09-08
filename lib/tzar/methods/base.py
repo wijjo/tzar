@@ -1,12 +1,46 @@
 """Archive support base class."""
 
-from typing import Text, Iterator
+from dataclasses import dataclass
+from typing import List, Text
+
+from jiig.utility.console import log_warning
+from jiig.utility.filesystem import find_system_program
+
+PV_INSTALLED = bool(find_system_program('pv'))
+PV_WARNED = False
+
+
+@dataclass
+class MethodData:
+    source_path: Text
+    source_list_path: Text
+    target_path: Text
+    verbose: bool
+    dry_run: bool
+    progress: bool
+    total_bytes: int
+
+    @property
+    def pv_progress(self) -> bool:
+        """
+        Use instead of `progress` member when "pv" is required.
+
+        :return: True if progress is required and pv is available
+        """
+        if not self.progress:
+            return False
+        if not PV_INSTALLED:
+            global PV_WARNED
+            if not PV_WARNED:
+                log_warning('Please install the "pv" program in order'
+                            ' to use the progress option.')
+                PV_WARNED = True
+            return False
+        return True
 
 
 class ArchiveMethodBase:
-    def save(self,
-             source_paths: Iterator[Text],
-             target_path: Text,
-             verbose: bool = False,
-             progress: bool = False):
+    """Base archive method class."""
+
+    def build_save_command(self, method_data: MethodData) -> List[Text]:
         raise NotImplementedError
