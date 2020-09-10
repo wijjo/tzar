@@ -5,6 +5,7 @@ import os
 from jiig import task, TaskRunner
 
 from tzar.archiver import create_archiver, get_method_names, DEFAULT_METHOD
+from tzar.constants import DEFAULT_TARGET_FOLDER
 
 
 @task(
@@ -15,6 +16,11 @@ from tzar.archiver import create_archiver, get_method_names, DEFAULT_METHOD
             'dest': 'EXCLUDE',
             'nargs': '*',
             'help': 'exclusion pattern(s), including unix-style wildcards',
+        },
+        ('-f', '--folder'): {
+            'dest': 'FOLDER',
+            'default': DEFAULT_TARGET_FOLDER,
+            'help': f'target folder (default: "{DEFAULT_TARGET_FOLDER}")',
         },
         '--keep-list': {
             'dest': 'KEEP_LIST',
@@ -32,9 +38,10 @@ from tzar.archiver import create_archiver, get_method_names, DEFAULT_METHOD
             'action': 'store_true',
             'help': 'display progress statistics'
         },
-        ('-t', '--target'): {
-            'dest': 'TARGET',
-            'help': 'target folder and name specification',
+        ('-t', '--timestamp'): {
+            'dest': 'TIMESTAMP',
+            'action': 'store_true',
+            'help': f'append timestamp to name',
         },
         '--gitignore': {
             'dest': 'GITIGNORE',
@@ -57,10 +64,14 @@ from tzar.archiver import create_archiver, get_method_names, DEFAULT_METHOD
 )
 def task_save(runner: TaskRunner):
     archiver = create_archiver(runner.args.METHOD,
-                               target_spec=runner.args.TARGET,
+                               target_folder=runner.args.FOLDER,
                                verbose=runner.verbose,
                                dry_run=runner.dry_run)
     for source_folder in runner.args.SOURCE_FOLDER or [os.getcwd()]:
         archiver.save(source_folder,
+                      gitignore=runner.args.GITIGNORE,
+                      excludes=runner.args.EXCLUDE,
+                      pending=runner.args.PENDING,
+                      timestamp=runner.args.TIMESTAMP,
                       progress=runner.args.PROGRESS,
                       keep_list=runner.args.KEEP_LIST)

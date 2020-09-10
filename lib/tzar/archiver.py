@@ -10,7 +10,7 @@ from jiig.utility.console import abort, log_message, log_warning
 from jiig.utility.filesystem import chdir, create_folder, short_path, iterate_filtered_files
 from jiig.utility.general import format_byte_count
 from jiig.utility.process import shell_command_string
-from tzar.constants import DEFAULT_TARGET
+from tzar.constants import TARGET_TIMESTAMP
 from tzar.methods.base import MethodData, ArchiveMethodBase
 
 
@@ -30,37 +30,35 @@ class Archiver:
 
     def __init__(self,
                  registered_method: RegisteredMethod,
-                 target_spec: Text = None,
+                 target_folder: Text = None,
                  verbose: bool = False,
-                 dry_run: bool = False,
-                 pending: bool = False,
-                 gitignore: bool = False,
-                 excludes: List[Text] = None
+                 dry_run: bool = False
                  ):
         self.method = registered_method.method_cls()
         self.method_name = registered_method.name
-        self.target_spec = target_spec or DEFAULT_TARGET
-        self.target_template = strftime(self.target_spec)
+        self.target_folder = os.path.abspath(target_folder)
         self.verbose = verbose
         self.dry_run = dry_run
-        self.pending = pending
-        self.gitignore = gitignore
-        self.excludes = excludes
 
     def save(self,
              source_folder: Text,
+             pending: bool = False,
+             gitignore: bool = False,
+             excludes: List[Text] = None,
+             timestamp: bool = False,
              progress: bool = False,
              keep_list: bool = False):
-        # Temporarily change the working folder to resolve relative paths.
+        create_folder(self.target_folder)
+        # Temporarily relocate in order to resolve relative paths.
         with chdir(source_folder):
-            target_name = os.path.basename(os.getcwd())
-            relative_target_path = self.target_template.format(name=target_name)
-            full_target = os.path.abspath(relative_target_path)
-            create_folder(os.path.dirname(full_target))
+            name_parts = [os.path.basename(os.getcwd())]
+            if timestamp:
+                name_parts.append(strftime(TARGET_TIMESTAMP))
+            full_target = os.path.join(self.target_folder, '_'.join(name_parts))
             source_file_iterator = iterate_filtered_files(source_folder,
-                                                          pending=self.pending,
-                                                          gitignore=self.gitignore,
-                                                          excludes=self.excludes)
+                                                          pending=pending,
+                                                          gitignore=gitignore,
+                                                          excludes=excludes)
             if self.dry_run:
                 for path_idx, path in enumerate(source_file_iterator):
                     if path_idx == 0:
@@ -144,21 +142,15 @@ def get_method_names() -> List[Text]:
 
 
 def create_archiver(method_name: Text,
-                    target_spec: Text = None,
+                    target_folder: Text = None,
                     verbose: bool = False,
-                    dry_run: bool = False,
-                    pending: bool = False,
-                    gitignore: bool = False,
-                    excludes: List[Text] = None
+                    dry_run: bool = False
                     ) -> Archiver:
     """Factory function to create Archiver for chosen method."""
     registered_method = METHOD_MAP.get(method_name)
     if not registered_method:
         raise RuntimeError(f'Bad archive method name "{method_name}".')
     return Archiver(registered_method,
-                    target_spec=target_spec,
+                    target_folder=target_folder,
                     verbose=verbose,
-                    dry_run=dry_run,
-                    pending=pending,
-                    gitignore=gitignore,
-                    excludes=excludes)
+                    dry_run=dry_run)
