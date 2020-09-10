@@ -2,12 +2,8 @@
 
 import os
 
-import time
-
 from jiig import task, TaskRunner
-from jiig.utility.filesystem import chdir, create_folder
 
-from tzar import constants
 from tzar.archiver import create_archiver, get_method_names, DEFAULT_METHOD
 
 
@@ -38,7 +34,6 @@ from tzar.archiver import create_archiver, get_method_names, DEFAULT_METHOD
         },
         ('-t', '--target'): {
             'dest': 'TARGET',
-            'default': constants.DEFAULT_TARGET,
             'help': 'target folder and name specification',
         },
         '--gitignore': {
@@ -61,20 +56,11 @@ from tzar.archiver import create_archiver, get_method_names, DEFAULT_METHOD
     ],
 )
 def task_save(runner: TaskRunner):
-    target_template = time.strftime(runner.args.TARGET)
     archiver = create_archiver(runner.args.METHOD,
+                               target_spec=runner.args.TARGET,
+                               verbose=runner.verbose,
                                dry_run=runner.dry_run)
-    source_folders = runner.args.SOURCE_FOLDER
-    if not source_folders:
-        source_folders = [os.getcwd()]
-    for source_folder in source_folders:
-        with chdir(source_folder):
-            relative_target_path = target_template.format(
-                name=os.path.basename(os.getcwd()))
-            absolute_target_path = os.path.abspath(relative_target_path)
-            create_folder(os.path.dirname(absolute_target_path))
-            archiver.save(source_folder,
-                          absolute_target_path,
-                          verbose=runner.verbose,
-                          progress=runner.args.PROGRESS,
-                          keep_list=runner.args.KEEP_LIST)
+    for source_folder in runner.args.SOURCE_FOLDER or [os.getcwd()]:
+        archiver.save(source_folder,
+                      progress=runner.args.PROGRESS,
+                      keep_list=runner.args.KEEP_LIST)

@@ -19,6 +19,8 @@ class MethodData:
     dry_run: bool
     progress: bool
     total_bytes: int
+    total_files: int
+    total_folders: int
 
     @property
     def pv_progress(self) -> bool:
@@ -39,8 +41,14 @@ class MethodData:
         return True
 
 
+@dataclass
+class MethodSaveData:
+    target_path: Text
+    command_arguments: List[Text]
+
+
 class ArchiveMethodBase:
     """Base archive method class."""
 
-    def build_save_command(self, method_data: MethodData) -> List[Text]:
+    def handle_save(self, method_data: MethodData) -> MethodSaveData:
         raise NotImplementedError

@@ -1,14 +1,12 @@
 """Support for GZ archives."""
 
-from typing import List, Text
-
 from tzar.archiver import archive_method
 
-from .base import MethodData, ArchiveMethodBase
-from .tarball import build_tarball_save_command
+from .base import MethodData, ArchiveMethodBase, MethodSaveData
+from .tarball import handle_tarball_save
 
 
-@archive_method('gz', file_extension='tar.gz', is_default=True)
+@archive_method('gz', is_default=True)
 class ArchiveMethodGZ(ArchiveMethodBase):
-    def build_save_command(self, method_data: MethodData) -> List[Text]:
-        return build_tarball_save_command(method_data, 'pigz', 'gzip')
+    def handle_save(self, method_data: MethodData) -> MethodSaveData:
+        return handle_tarball_save(method_data, compressors=['pigz', 'gzip'], extension='gz')
