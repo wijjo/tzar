@@ -4,14 +4,14 @@ import os
 from dataclasses import dataclass
 from tempfile import NamedTemporaryFile
 from time import strftime
-from typing import Text, Dict, Type, List, Optional, Callable, Set
+from typing import Text, Dict, Type, List, Optional, Callable, Set, Sequence
 
 from jiig.utility.console import abort, log_message, log_warning
 from jiig.utility.filesystem import chdir, create_folder, short_path, iterate_filtered_files
 from jiig.utility.general import format_byte_count
 from jiig.utility.process import shell_command_string
 from tzar.constants import TARGET_TIMESTAMP
-from tzar.methods.base import MethodData, ArchiveMethodBase
+from tzar.methods.base import MethodSaveData, ArchiveMethodBase, MethodListItem
 
 
 @dataclass
@@ -25,8 +25,8 @@ METHOD_MAP: Dict[Text, RegisteredMethod] = {}
 DEFAULT_METHOD: Optional[Text] = None
 
 
-class Archiver:
-    """Archiver class drives archiving activity using the selected method."""
+class ArchiverSaver:
+    """Archiver class drives saving archive using the selected method."""
 
     def __init__(self,
                  registered_method: RegisteredMethod,
@@ -40,14 +40,14 @@ class Archiver:
         self.verbose = verbose
         self.dry_run = dry_run
 
-    def save(self,
-             source_folder: Text,
-             pending: bool = False,
-             gitignore: bool = False,
-             excludes: List[Text] = None,
-             timestamp: bool = False,
-             progress: bool = False,
-             keep_list: bool = False):
+    def save_archive(self,
+                     source_folder: Text,
+                     pending: bool = False,
+                     gitignore: bool = False,
+                     excludes: List[Text] = None,
+                     timestamp: bool = False,
+                     progress: bool = False,
+                     keep_list: bool = False):
         create_folder(self.target_folder)
         # Temporarily relocate in order to resolve relative paths.
         with chdir(source_folder):
@@ -96,15 +96,15 @@ class Archiver:
                     else:
                         log_warning('Source path is not a file.', file_path)
                 temp_file.flush()
-                method_data = MethodData(source_path=source_folder,
-                                         source_list_path=temp_file.name,
-                                         target_path=full_target,
-                                         verbose=self.verbose and not progress,
-                                         dry_run=self.dry_run,
-                                         progress=progress,
-                                         total_bytes=total_bytes,
-                                         total_files=total_files,
-                                         total_folders=total_folders)
+                method_data = MethodSaveData(source_path=source_folder,
+                                             source_list_path=temp_file.name,
+                                             target_path=full_target,
+                                             verbose=self.verbose and not progress,
+                                             dry_run=self.dry_run,
+                                             progress=progress,
+                                             total_bytes=total_bytes,
+                                             total_files=total_files,
+                                             total_folders=total_folders)
                 save_data = self.method.handle_save(method_data)
                 log_message(f'Saving archive: {short_path(save_data.target_path)}')
                 full_command = shell_command_string(*save_data.command_arguments)
@@ -119,6 +119,23 @@ class Archiver:
                 ret_code = os.system(full_command)
                 if ret_code != 0:
                     abort('Archive command failed.', full_command)
+
+
+def list_archive(archive_path: Text) -> Sequence[MethodListItem]:
+    """
+    List tarball contents.
+
+    :param archive_path: archive tarball file path
+    :return: sequence of archive items
+    """
+    return method_for_archive(archive_path).handle_list(archive_path)
+
+
+def method_for_archive(archive_path: Text) -> ArchiveMethodBase:
+    for registered_method in METHOD_MAP.values():
+        if registered_method.method_cls.is_supported_archive(archive_path):
+            return registered_method.method_cls()
+    abort(f'Unsupported archive.', archive_path)
 
 
 def archive_method(name: Text, is_default: bool = False,) -> Callable:
@@ -145,12 +162,12 @@ def create_archiver(method_name: Text,
                     target_folder: Text = None,
                     verbose: bool = False,
                     dry_run: bool = False
-                    ) -> Archiver:
+                    ) -> ArchiverSaver:
     """Factory function to create Archiver for chosen method."""
     registered_method = METHOD_MAP.get(method_name)
     if not registered_method:
         raise RuntimeError(f'Bad archive method name "{method_name}".')
-    return Archiver(registered_method,
-                    target_folder=target_folder,
-                    verbose=verbose,
-                    dry_run=dry_run)
+    return ArchiverSaver(registered_method,
+                         target_folder=target_folder,
+                         verbose=verbose,
+                         dry_run=dry_run)
