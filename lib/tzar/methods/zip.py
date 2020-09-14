@@ -3,7 +3,7 @@
 import os
 from time import mktime
 import zipfile
-from typing import Text, Sequence
+from typing import Text, Sequence, Optional
 
 from tzar.archiver import archive_method
 
@@ -13,7 +13,8 @@ from .base import MethodSaveData, ArchiveMethodBase, MethodSaveResult, MethodLis
 @archive_method('zip')
 class ArchiveMethodZip(ArchiveMethodBase):
 
-    def handle_save(self, save_data: MethodSaveData) -> MethodSaveResult:
+    @classmethod
+    def handle_save(cls, save_data: MethodSaveData) -> MethodSaveResult:
         """
         Required override for saving an archive.
 
@@ -25,11 +26,12 @@ class ArchiveMethodZip(ArchiveMethodBase):
             cmd_args.append('-q')
         if save_data.pv_progress:
             cmd_args.extend(['|', 'pv', '-bret'])
-        zip_path = save_data.target_path + '.zip'
+        zip_path = save_data.archive_path + '.zip'
         cmd_args.extend(['>', zip_path])
-        return MethodSaveResult(target_path=zip_path, command_arguments=cmd_args)
+        return MethodSaveResult(archive_path=zip_path, command_arguments=cmd_args)
 
-    def handle_list(self, archive_path: Text) -> Sequence[MethodListItem]:
+    @classmethod
+    def handle_list(cls, archive_path: Text) -> Sequence[MethodListItem]:
         """
         Required override for listing archive contents.
 
@@ -43,11 +45,13 @@ class ArchiveMethodZip(ArchiveMethodBase):
                 yield MethodListItem(path=info.filename, time=file_time, size=file_size)
 
     @classmethod
-    def is_supported_archive(cls, archive_path: Text) -> bool:
+    def check_supported(cls, archive_path: Text) -> Optional[Text]:
         """
         Required override for testing if an archive is handled by this method.
 
         :param archive_path: path of archive file or folder
-        :return: True if the archive type is handled by the archive method object
+        :return: base filename or path if it is handled or None if it is not
         """
-        return os.path.isfile(archive_path) and archive_path.endswith('.zip')
+        if os.path.isfile(archive_path) and archive_path.endswith('.zip'):
+            return archive_path[:-4]
+        return None

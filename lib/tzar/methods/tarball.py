@@ -33,12 +33,12 @@ def handle_tarball_save(save_data: MethodSaveData,
     if save_data.pv_progress:
         # Create a pipeline with "pv" for progress reporting.
         cmd_args.extend(['|', 'pv', '-bret'])
-    target_path_parts = [save_data.target_path, 'tar']
+    archive_path_parts = [save_data.archive_path, 'tar']
     if extension:
-        target_path_parts.append(extension)
-    target_path = '.'.join(target_path_parts)
-    cmd_args.extend(['>', target_path])
-    return MethodSaveResult(target_path=target_path, command_arguments=cmd_args)
+        archive_path_parts.append(extension)
+    archive_path = '.'.join(archive_path_parts)
+    cmd_args.extend(['>', archive_path])
+    return MethodSaveResult(archive_path=archive_path, command_arguments=cmd_args)
 
 
 def handle_tarball_list(archive_path: Text,

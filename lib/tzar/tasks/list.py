@@ -6,7 +6,7 @@ from typing import Text, Tuple
 from jiig import task, TaskRunner
 from jiig.utility.general import format_table, format_byte_count
 
-from tzar.archiver import list_archive
+from tzar.archiver import Archiver
 from tzar.methods.base import MethodListItem
 
 
@@ -46,8 +46,9 @@ def task_list(runner: TaskRunner):
             file_size = '-'
         file_time = strftime('%c', localtime(item.time))
         return file_size, file_time, item.path
+    archiver = Archiver()
     for archive_path in runner.args.SOURCE_ARCHIVE:
-        archive_items = list_archive(archive_path)
+        archive_items = archiver.list_archive(archive_path)
         for line in format_table(*[_item_tuple(item) for item in archive_items],
                                  headers=['size', 'date/time', 'path']):
             print(line)

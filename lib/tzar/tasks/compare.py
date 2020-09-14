@@ -14,8 +14,8 @@ from jiig import task, TaskRunner
             'help': 'source archive file or folder',
         },
         {
-            'dest': 'TARGET_FOLDER',
-            'help': 'target folder (default: working folder)',
+            'dest': 'ARCHIVE_FOLDER',
+            'help': 'archive folder (default: working folder)',
         },
     ],
 )

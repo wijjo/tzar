@@ -16,7 +16,7 @@ class MethodSaveData:
 
     source_path: Text
     source_list_path: Text
-    target_path: Text
+    archive_path: Text
     verbose: bool
     dry_run: bool
     progress: bool
@@ -46,7 +46,7 @@ class MethodSaveData:
 @dataclass
 class MethodSaveResult:
     """Output data received after saving archive."""
-    target_path: Text
+    archive_path: Text
     command_arguments: List[Text]
 
 
@@ -62,7 +62,8 @@ class MethodListItem:
 class ArchiveMethodBase:
     """Base archive method class."""
 
-    def handle_save(self, save_data: MethodSaveData) -> MethodSaveResult:
+    @classmethod
+    def handle_save(cls, save_data: MethodSaveData) -> MethodSaveResult:
         """
         Required override for saving an archive.
 
@@ -71,7 +72,8 @@ class ArchiveMethodBase:
         """
         raise NotImplementedError
 
-    def handle_list(self, archive_path: Text) -> Sequence[MethodListItem]:
+    @classmethod
+    def handle_list(cls, archive_path: Text) -> Sequence[MethodListItem]:
         """
         Required override for listing archive contents.
 
@@ -83,11 +85,11 @@ class ArchiveMethodBase:
         raise NotImplementedError
 
     @classmethod
-    def is_supported_archive(cls, archive_path: Text) -> bool:
+    def check_supported(cls, archive_path: Text) -> Optional[Text]:
         """
         Required override for testing if an archive is handled by a particular method.
 
         :param archive_path: path of archive file or folder
-        :return: True if the archive type is handled by the archive method object
+        :return: base filename or path if it is handled or None if it is not
         """
         raise NotImplementedError

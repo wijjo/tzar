@@ -13,6 +13,6 @@ jiig.options(
     description='Simple archive manager.',
 )
 
-from tzar.methods import gz, files, xz, zip     # noqa
-from jiig.tasks import alias, help, venv        # noqa
-from tzar.tasks import compare, list, save      # noqa
+from tzar.methods import gz, files, xz, zip             # noqa
+from jiig.tasks import alias, help, venv                # noqa
+from tzar.tasks import catalog, compare, list, save     # noqa
