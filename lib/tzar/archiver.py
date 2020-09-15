@@ -1,18 +1,17 @@
 """Generic archiver to drive selected archive method."""
 
 import os
-import re
 from dataclasses import dataclass
 from tempfile import NamedTemporaryFile
 from time import strftime, mktime, struct_time, localtime
-from typing import Text, Dict, Type, List, Optional, Callable, Set, Sequence
+from typing import Text, Dict, Type, List, Optional, Callable, Set, Sequence, Iterator
 
 from jiig.utility.console import abort, log_error, log_message, log_warning
 from jiig.utility.filesystem import chdir, create_folder, short_path, iterate_filtered_files
 from jiig.utility.general import format_byte_count
 from jiig.utility.process import shell_command_string
 
-from tzar.constants import TARGET_TIMESTAMP, DEFAULT_ARCHIVE_FOLDER, ARCHIVE_NAME_PATTERN
+from tzar.constants import TIMESTAMP_FORMAT, TIMESTAMP_REGEX, DEFAULT_ARCHIVE_FOLDER
 from tzar.methods.base import MethodSaveData, ArchiveMethodBase, MethodListItem
 
 
@@ -41,7 +40,7 @@ class CatalogItem:
     method_name: Text
     file_name: Text
     folder: Text
-    comment: Text
+    labels: List[Text]
     size: int
     time: float
 
@@ -58,17 +57,34 @@ class CatalogItem:
         return strftime('%Y-%m-%d %H:%M.%S', self.time_struct)
 
 
+def _labels_from_string(labels: Text = None) -> Iterator[Text]:
+    if labels:
+        for label in labels.split(','):
+            if label.isalnum():
+                yield label
+            else:
+                log_error(f'Bad non-alphanumeric archive label "{label}".')
+
+
 class Archiver:
     """Archiver class is responsible for archive catalogs and operations."""
 
     def __init__(self,
+                 source_name: Text = None,
                  archive_folder: Text = None,
+                 labels: Text = None,
                  verbose: bool = False,
                  dry_run: bool = False
                  ):
+        self._source_name = source_name
         self.archive_folder = os.path.abspath(archive_folder or DEFAULT_ARCHIVE_FOLDER)
+        self.labels: List[Text] = list(_labels_from_string(labels))
         self.verbose = verbose
         self.dry_run = dry_run
+
+    @property
+    def source_name(self):
+        return self._source_name or os.path.basename(os.getcwd())
 
     def save_archive(self,
                      source_folder: Text,
@@ -85,9 +101,11 @@ class Archiver:
         create_folder(self.archive_folder)
         # Temporarily relocate in order to resolve relative paths.
         with chdir(source_folder):
-            name_parts = [os.path.basename(os.getcwd())]
+            name_parts = [self.source_name]
             if timestamp:
-                name_parts.append(strftime(TARGET_TIMESTAMP))
+                name_parts.append(strftime(TIMESTAMP_FORMAT))
+            if self.labels:
+                name_parts.extend(self.labels)
             full_folder_path = os.path.join(self.archive_folder, '_'.join(name_parts))
             source_file_iterator = iterate_filtered_files(source_folder,
                                                           pending=pending,
@@ -145,9 +163,7 @@ class Archiver:
                 full_command = shell_command_string(*save_data.command_arguments)
                 if self.verbose:
                     log_message('Archive command:', full_command)
-                formatted_bytes = format_byte_count(total_bytes,
-                                                    decimal_places=1,
-                                                    binary_units=True)
+                formatted_bytes = format_byte_count(total_bytes, unit_format='b')
                 log_message(f'Archiving {formatted_bytes}'
                             f' from {total_files} files'
                             f' in {total_folders} folders ...')
@@ -199,35 +215,38 @@ class Archiver:
         if not os.path.isdir(source_folder):
             log_error(f'Source folder does not exist.', source_folder)
             return []
-        source_name = os.path.basename(source_folder)
-        pattern = ARCHIVE_NAME_PATTERN.format(name=source_name)
-        matcher = re.compile(pattern)
         items: List[CatalogItem] = []
         with chdir(self.archive_folder, quiet=True):
             for file_name in os.listdir(self.archive_folder):
-                # First see if there's a method to handle it.
+                # See if there's a method to handle it.
                 archive_path = os.path.join(self.archive_folder, file_name)
                 applicable_method = self.method_for_archive(archive_path)
                 if applicable_method:
-                    # Then check if it matches the naming pattern.
-                    matched = matcher.match(applicable_method.file_name)
-                    if matched:
+                    # Check if it matches the source name.
+                    name_parts = applicable_method.file_name.split('_')
+                    if name_parts[0] == self.source_name:
                         file_stat = os.stat(file_name)
-                        time_string = matched.group(2)
-                        if time_string:
-                            file_time = mktime((int(matched.group('year')),
-                                                int(matched.group('month')),
-                                                int(matched.group('day')),
-                                                int(matched.group('hours')),
-                                                int(matched.group('minutes')),
-                                                int(matched.group('seconds')),
-                                                0, 0, -1))
-                        else:
-                            file_time = file_stat.st_mtime,
+                        file_time = file_stat.st_mtime
+                        labels: List[Text] = []
+                        if len(name_parts) >= 2:
+                            timestamp_matched = TIMESTAMP_REGEX.match(name_parts[1])
+                            if timestamp_matched:
+                                file_time = mktime((
+                                    int(timestamp_matched.group('year')),
+                                    int(timestamp_matched.group('month')),
+                                    int(timestamp_matched.group('day')),
+                                    int(timestamp_matched.group('hours')),
+                                    int(timestamp_matched.group('minutes')),
+                                    int(timestamp_matched.group('seconds')),
+                                    0, 0, -1))
+                                raw_labels = name_parts[2:]
+                            else:
+                                raw_labels = name_parts[1:]
+                            labels = sorted(list(set([l for l in raw_labels if l.isalnum()])))
                         items.append(CatalogItem(file_name=file_name,
                                                  method_name=applicable_method.method_name,
                                                  folder=self.archive_folder,
-                                                 comment=matched.group('comment') or '',
+                                                 labels=labels,
                                                  size=file_stat.st_size,
                                                  time=file_time))
         return sorted(items, key=lambda item: item.time, reverse=True)
@@ -253,11 +272,24 @@ def get_method_names() -> List[Text]:
     return list(sorted(METHOD_MAP.keys()))
 
 
-def create_archiver(archive_folder: Text = None,
+def create_archiver(source_name: Text = None,
+                    archive_folder: Text = None,
+                    labels: Text = None,
                     verbose: bool = False,
                     dry_run: bool = False
                     ) -> Archiver:
-    """Factory function to create Archiver for chosen method."""
-    return Archiver(archive_folder=archive_folder,
+    """
+    Factory function to create Archiver for chosen method.
+
+    :param source_name: base archive name
+    :param archive_folder: archive container folder
+    :param labels: optional comma-separated labels
+    :param verbose: display extra messages if True
+    :param dry_run: perform dry run if True
+    :return: archiver object
+    """
+    return Archiver(source_name=source_name,
+                    archive_folder=archive_folder,
+                    labels=labels,
                     verbose=verbose,
                     dry_run=dry_run)

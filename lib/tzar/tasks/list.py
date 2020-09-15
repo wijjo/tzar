@@ -14,15 +14,10 @@ from tzar.methods.base import MethodListItem
     'list',
     help='list archive contents',
     options={
-        ('-u', '--decimal-units'): {
-            'dest': 'DECIMAL_UNITS',
-            'action': 'store_true',
-            'help': 'display sizes as decimal, e.g. KB, MB, units',
-        },
-        ('-U', '--binary-units'): {
-            'dest': 'BINARY_UNITS',
-            'action': 'store_true',
-            'help': 'display sizes as binary, e.g. KiB, MiB, units',
+        ('-S', '--size-format'): {
+            'dest': 'SIZE_FORMAT',
+            'choices': ['b', 'd'],
+            'help': 'format size as decimal KB/MB/... if "d" or binary KiB/MiB if "b"',
         },
     },
     arguments=[
@@ -36,12 +31,7 @@ from tzar.methods.base import MethodListItem
 def task_list(runner: TaskRunner):
     def _item_tuple(item: MethodListItem) -> Tuple[Text, Text, Text]:
         if item.size is not None:
-            if runner.args.DECIMAL_UNITS:
-                file_size = format_byte_count(item.size)
-            elif runner.args.BINARY_UNITS:
-                file_size = format_byte_count(item.size, binary_units=True)
-            else:
-                file_size = str(item.size)
+            file_size = format_byte_count(item.size, unit_format=runner.args.SIZE_FORMAT)
         else:
             file_size = '-'
         file_time = strftime('%c', localtime(item.time))

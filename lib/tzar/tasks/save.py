@@ -1,6 +1,7 @@
 """Tzar save command."""
 
 import os
+from typing import List, Text
 
 from jiig import task, TaskRunner
 
@@ -12,6 +13,10 @@ from tzar.constants import DEFAULT_ARCHIVE_FOLDER
     'save',
     help='save an archive of the working folder',
     options={
+        ('-l', '--label'): {
+            'dest': 'LABELS',
+            'help': 'comma-separated labels for tagging the archive',
+        },
         ('-e', '--exclude'): {
             'dest': 'EXCLUDE',
             'nargs': '*',
@@ -27,6 +32,10 @@ from tzar.constants import DEFAULT_ARCHIVE_FOLDER
             'choices': get_method_names(),
             'default': DEFAULT_METHOD,
             'help': f'archive method (default: "{DEFAULT_METHOD}")',
+        },
+        ('-n', '--name'): {
+            'dest': 'SOURCE_NAME',
+            'help': 'source name (default: working folder name)',
         },
         ('-p', '--progress'): {
             'dest': 'PROGRESS',
@@ -63,7 +72,9 @@ from tzar.constants import DEFAULT_ARCHIVE_FOLDER
     ],
 )
 def task_save(runner: TaskRunner):
-    archiver = create_archiver(archive_folder=runner.args.ARCHIVE_FOLDER,
+    archiver = create_archiver(source_name=runner.args.SOURCE_NAME,
+                               archive_folder=runner.args.ARCHIVE_FOLDER,
+                               labels=runner.args.LABELS,
                                verbose=runner.verbose,
                                dry_run=runner.dry_run)
     for source_folder in runner.args.SOURCE_FOLDER or [os.getcwd()]:

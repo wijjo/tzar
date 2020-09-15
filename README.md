@@ -11,7 +11,7 @@ Simplified compressed archive management.
 
 ## Tzar input specification
 
-For simplicity and consistency `tzar` does not take a source file/folder 
+For simplicity and consistency `tzar` does not take a source file/folder
 specification. It operates solely on the working folder. It can be optionally
 tweaked to exclude files and folders.
 
@@ -22,20 +22,20 @@ folder, a name suffix temple, and an extension when it is an archive file.
 
 ### Target base folder
 
-The target base folder can be a relative or absolute path. 
+The target base folder can be a relative or absolute path.
 
 Special shell symbols like "~" for the home folder and ".." for the parent
 folder ar expanded.
 
 A folder path ending with "/**" indicates that the source folder should be added
-to the output folder path as a relative sub-folder. In effect, this allows the 
+to the output folder path as a relative sub-folder. In effect, this allows the
 backup structure to mirror a source folder tree.
 
 ### Target name suffix
 
 The name suffix template can include normal characters and `time.strftime()`
 format codes for date/time-based names.
- 
+
 An ending '#' character appends a unique counter to the file name, based on the
 maximum counter value plus one. Please note that the '#' character only has
 special meaning as the last character, and when date/time `%` codes are not
@@ -44,8 +44,6 @@ being used for unique name generation.
 ### Target path post-processing
 
 "$<NAME>" environment variables in the final output path are expanded.
-
-TODO: More and better explanation of output specifications is needed.
 
 ## Commands
 
@@ -83,7 +81,7 @@ implement command line parsing and task execution.
 
 Update the `PATH` environment variable to include the root Tzar local repository
 folder, e.g. in `~/.bashrc`.
- 
+
 #### Option 2: Symlink the `tzar` script to a folder that is already in the path.
 
 The following example assumes `~/bin` exists and is already in the system
