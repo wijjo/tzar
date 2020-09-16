@@ -1,23 +1,14 @@
 """Tzar compare command."""
 
-from jiig import task, TaskRunner
+from jiig import task
+
+from tzar import TzarTaskRunner
 
 
 @task(
     'compare',
     help='compare archive to existing files',
-    options={
-    },
-    arguments=[
-        {
-            'dest': 'SOURCE_ARCHIVE',
-            'help': 'source archive file or folder',
-        },
-        {
-            'dest': 'ARCHIVE_FOLDER',
-            'help': 'archive folder (default: working folder)',
-        },
-    ],
+    common_arguments=['SOURCE_ARCHIVE', 'ARCHIVE_FOLDER']
 )
-def task_compare(runner: TaskRunner):
+def task_compare(_runner: TzarTaskRunner):
     pass

@@ -1,12 +1,10 @@
 """Tzar save command."""
 
 import os
-from typing import List, Text
 
-from jiig import task, TaskRunner
+from jiig import task
 
-from tzar.archiver import create_archiver, get_method_names, DEFAULT_METHOD
-from tzar.constants import DEFAULT_ARCHIVE_FOLDER
+from tzar import TzarTaskRunner
 
 
 @task(
@@ -21,21 +19,6 @@ from tzar.constants import DEFAULT_ARCHIVE_FOLDER
             'dest': 'EXCLUDE',
             'nargs': '*',
             'help': 'exclusion pattern(s), including gitignore-style wildcards',
-        },
-        ('-f', '--archive-folder'): {
-            'dest': 'ARCHIVE_FOLDER',
-            'default': DEFAULT_ARCHIVE_FOLDER,
-            'help': f'archive folder (default: "{DEFAULT_ARCHIVE_FOLDER}")',
-        },
-        ('-m', '--method'): {
-            'dest': 'METHOD',
-            'choices': get_method_names(),
-            'default': DEFAULT_METHOD,
-            'help': f'archive method (default: "{DEFAULT_METHOD}")',
-        },
-        ('-n', '--name'): {
-            'dest': 'SOURCE_NAME',
-            'help': 'source name (default: working folder name)',
         },
         ('-p', '--progress'): {
             'dest': 'PROGRESS',
@@ -63,20 +46,13 @@ from tzar.constants import DEFAULT_ARCHIVE_FOLDER
             'help': 'save only modified version-controlled files',
         },
     },
-    arguments=[
-        {
-            'dest': 'SOURCE_FOLDER',
-            'nargs': '*',
-            'help': 'source folder(s) (default: working folder)',
-        },
-    ],
+    common_options=['ARCHIVE_FOLDER', 'SOURCE_NAME', 'METHOD'],
+    common_arguments=['SOURCE_FOLDER*'],
 )
-def task_save(runner: TaskRunner):
-    archiver = create_archiver(source_name=runner.args.SOURCE_NAME,
-                               archive_folder=runner.args.ARCHIVE_FOLDER,
-                               labels=runner.args.LABELS,
-                               verbose=runner.verbose,
-                               dry_run=runner.dry_run)
+def task_save(runner: TzarTaskRunner):
+    archiver = runner.create_archiver(source_name=runner.args.SOURCE_NAME,
+                                      archive_folder=runner.args.ARCHIVE_FOLDER,
+                                      labels=runner.args.LABELS)
     for source_folder in runner.args.SOURCE_FOLDER or [os.getcwd()]:
         archiver.save_archive(source_folder,
                               runner.args.METHOD,

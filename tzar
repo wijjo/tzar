@@ -8,11 +8,70 @@ Jiig-based tool to create and manage archives of the working folder.
 
 import jiig
 
-jiig.options(
+# Register custom task runner.
+from tzar.task_runner import create_runner              # noqa
+
+# Common options (below) need to know what methods are available.
+from tzar.methods import gz, files, xz, zip             # noqa
+
+from tzar.constants import DEFAULT_ARCHIVE_FOLDER
+from tzar.archiver import get_method_names, DEFAULT_METHOD
+
+# Register the tool, including common options and arguments. This must occur
+# prior to registering tasks so that common options/arguments are available.
+jiig.tool(
     name='tzar',
     description='Simple archive manager.',
+
+    common_options={
+        ('-f', '--archive-folder'): {
+            'dest': 'ARCHIVE_FOLDER',
+            'default': DEFAULT_ARCHIVE_FOLDER,
+            'help': f'archive folder (default: "{DEFAULT_ARCHIVE_FOLDER}")',
+        },
+        ('-n', '--name'): {
+            'dest': 'SOURCE_NAME',
+            'help': 'source name (default: working folder name)',
+        },
+        ('-s', '--source-folder'): {
+            'dest': 'SOURCE_FOLDER',
+            'help': 'source folder (default: working folder)',
+        },
+        ('-u', '--binary-size-unit'): {
+            'dest': 'BINARY_SIZE_UNIT',
+            'action': 'store_true',
+            'help': 'format size as binary 1024-based KiB, MiB, etc.',
+        },
+        ('-U', '--decimal-size-unit'): {
+            'dest': 'DECIMAL_SIZE_UNIT',
+            'action': 'store_true',
+            'help': 'format size as decimal 1000-based KB, MB, etc.',
+        },
+        ('-m', '--method'): {
+            'dest': 'METHOD',
+            'choices': get_method_names(),
+            'default': DEFAULT_METHOD,
+            'help': f'archive method (default: "{DEFAULT_METHOD}")',
+        },
+    },
+
+    common_arguments=[
+        {
+            'dest': 'ARCHIVE_FOLDER',
+            'default': DEFAULT_ARCHIVE_FOLDER,
+            'help': f'archive folder (default: "{DEFAULT_ARCHIVE_FOLDER}")',
+        },
+        {
+            'dest': 'SOURCE_ARCHIVE',
+            'help': 'source archive file or folder',
+        },
+        {
+            'dest': 'SOURCE_FOLDER',
+            'help': 'source folder(s) (default: working folder)',
+        },
+    ],
 )
 
-from tzar.methods import gz, files, xz, zip             # noqa
+# With common options/arguments registered, tasks can be registered also.
 from jiig.tasks import alias, help, venv                # noqa
 from tzar.tasks import catalog, compare, list, save     # noqa

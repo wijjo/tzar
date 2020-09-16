@@ -241,7 +241,8 @@ class Archiver:
                             raw_labels = name_parts[2:]
                         else:
                             raw_labels = name_parts[1:]
-                        labels = sorted(list(set([l for l in raw_labels if l.isalnum()])))
+                        labels = sorted(list(
+                            set([label for label in raw_labels if label.isalnum()])))
                     items.append(CatalogItem(file_name=file_name,
                                              method_name=applicable_method.method_name,
                                              folder=self.archive_folder,
@@ -256,7 +257,6 @@ def archive_method(name: Text, is_default: bool = False,) -> Callable:
     :param name: method name
     :param is_default: default method if True
     """
-
     def _inner(method_cls: Type[ArchiveMethodBase]):
         METHOD_MAP[name] = RegisteredMethod(name, method_cls)
         if is_default:
