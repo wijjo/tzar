@@ -216,39 +216,38 @@ class Archiver:
             log_error(f'Source folder does not exist.', source_folder)
             return []
         items: List[CatalogItem] = []
-        with chdir(self.archive_folder, quiet=True):
-            for file_name in os.listdir(self.archive_folder):
-                # See if there's a method to handle it.
-                archive_path = os.path.join(self.archive_folder, file_name)
-                applicable_method = self.method_for_archive(archive_path)
-                if applicable_method:
-                    # Check if it matches the source name.
-                    name_parts = applicable_method.file_name.split('_')
-                    if name_parts[0] == self.source_name:
-                        file_stat = os.stat(file_name)
-                        file_time = file_stat.st_mtime
-                        labels: List[Text] = []
-                        if len(name_parts) >= 2:
-                            timestamp_matched = TIMESTAMP_REGEX.match(name_parts[1])
-                            if timestamp_matched:
-                                file_time = mktime((
-                                    int(timestamp_matched.group('year')),
-                                    int(timestamp_matched.group('month')),
-                                    int(timestamp_matched.group('day')),
-                                    int(timestamp_matched.group('hours')),
-                                    int(timestamp_matched.group('minutes')),
-                                    int(timestamp_matched.group('seconds')),
-                                    0, 0, -1))
-                                raw_labels = name_parts[2:]
-                            else:
-                                raw_labels = name_parts[1:]
-                            labels = sorted(list(set([l for l in raw_labels if l.isalnum()])))
-                        items.append(CatalogItem(file_name=file_name,
-                                                 method_name=applicable_method.method_name,
-                                                 folder=self.archive_folder,
-                                                 labels=labels,
-                                                 size=file_stat.st_size,
-                                                 time=file_time))
+        for file_name in os.listdir(self.archive_folder):
+            # See if there's a method to handle it.
+            archive_path = os.path.join(self.archive_folder, file_name)
+            applicable_method = self.method_for_archive(archive_path)
+            if applicable_method:
+                # Check if it matches the source name.
+                name_parts = applicable_method.file_name.split('_')
+                if name_parts[0] == self.source_name:
+                    file_stat = os.stat(archive_path)
+                    file_time = file_stat.st_mtime
+                    labels: List[Text] = []
+                    if len(name_parts) >= 2:
+                        timestamp_matched = TIMESTAMP_REGEX.match(name_parts[1])
+                        if timestamp_matched:
+                            file_time = mktime((
+                                int(timestamp_matched.group('year')),
+                                int(timestamp_matched.group('month')),
+                                int(timestamp_matched.group('day')),
+                                int(timestamp_matched.group('hours')),
+                                int(timestamp_matched.group('minutes')),
+                                int(timestamp_matched.group('seconds')),
+                                0, 0, -1))
+                            raw_labels = name_parts[2:]
+                        else:
+                            raw_labels = name_parts[1:]
+                        labels = sorted(list(set([l for l in raw_labels if l.isalnum()])))
+                    items.append(CatalogItem(file_name=file_name,
+                                             method_name=applicable_method.method_name,
+                                             folder=self.archive_folder,
+                                             labels=labels,
+                                             size=file_stat.st_size,
+                                             time=file_time))
         return sorted(items, key=lambda item: item.time, reverse=True)
 
 
