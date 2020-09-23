@@ -11,10 +11,6 @@ from tzar import TzarTaskRunner
     'save',
     help='save an archive of the working folder',
     options={
-        ('-l', '--label'): {
-            'dest': 'LABELS',
-            'help': 'comma-separated labels for tagging the archive',
-        },
         ('-e', '--exclude'): {
             'dest': 'EXCLUDE',
             'nargs': '*',
@@ -25,10 +21,10 @@ from tzar import TzarTaskRunner
             'action': 'store_true',
             'help': 'display progress statistics'
         },
-        ('-t', '--timestamp'): {
-            'dest': 'TIMESTAMP',
+        ('-T', '--no-timestamp'): {
+            'dest': 'DISABLE_TIMESTAMP',
             'action': 'store_true',
-            'help': f'append timestamp to name',
+            'help': f'disable adding timestamp to name',
         },
         '--gitignore': {
             'dest': 'GITIGNORE',
@@ -46,19 +42,19 @@ from tzar import TzarTaskRunner
             'help': 'save only modified version-controlled files',
         },
     },
-    common_options=['ARCHIVE_FOLDER', 'SOURCE_NAME', 'METHOD'],
+    common_options=['ARCHIVE_FOLDER', 'SOURCE_NAME', 'METHOD', 'TAGS'],
     common_arguments=['SOURCE_FOLDER*'],
 )
 def task_save(runner: TzarTaskRunner):
     archiver = runner.create_archiver(source_name=runner.args.SOURCE_NAME,
-                                      archive_folder=runner.args.ARCHIVE_FOLDER,
-                                      labels=runner.args.LABELS)
+                                      archive_folder=runner.args.ARCHIVE_FOLDER)
     for source_folder in runner.args.SOURCE_FOLDER or [os.getcwd()]:
         archiver.save_archive(source_folder,
                               runner.args.METHOD,
                               gitignore=runner.args.GITIGNORE,
                               excludes=runner.args.EXCLUDE,
                               pending=runner.args.PENDING,
-                              timestamp=runner.args.TIMESTAMP,
+                              timestamp=not runner.args.DISABLE_TIMESTAMP,
                               progress=runner.args.PROGRESS,
-                              keep_list=runner.args.KEEP_LIST)
+                              keep_list=runner.args.KEEP_LIST,
+                              tags=runner.args.TAGS)

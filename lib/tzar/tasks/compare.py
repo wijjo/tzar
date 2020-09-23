@@ -8,7 +8,7 @@ from tzar import TzarTaskRunner
 @task(
     'compare',
     help='compare archive to existing files',
-    common_arguments=['SOURCE_ARCHIVE', 'ARCHIVE_FOLDER']
+    common_arguments=['ARCHIVE_PATH', 'SOURCE_FOLDER']
 )
 def task_compare(_runner: TzarTaskRunner):
     pass

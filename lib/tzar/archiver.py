@@ -4,7 +4,7 @@ import os
 from dataclasses import dataclass
 from tempfile import NamedTemporaryFile
 from time import strftime, mktime, struct_time, localtime
-from typing import Text, Dict, Type, List, Optional, Callable, Set, Sequence, Iterator
+from typing import Text, Dict, Type, List, Optional, Callable, Set, Sequence, Iterator, Collection
 
 from jiig.utility.console import abort, log_error, log_message, log_warning
 from jiig.utility.filesystem import chdir, create_folder, short_path, iterate_filtered_files
@@ -40,7 +40,7 @@ class CatalogItem:
     method_name: Text
     file_name: Text
     folder: Text
-    labels: List[Text]
+    tags: List[Text]
     size: int
     time: float
 
@@ -57,13 +57,13 @@ class CatalogItem:
         return strftime('%Y-%m-%d %H:%M.%S', self.time_struct)
 
 
-def _labels_from_string(labels: Text = None) -> Iterator[Text]:
-    if labels:
-        for label in labels.split(','):
-            if label.isalnum():
-                yield label
+def _tags_from_string(tags: Text = None) -> Iterator[Text]:
+    if tags:
+        for tag in tags.split(','):
+            if tag.isalnum():
+                yield tag
             else:
-                log_error(f'Bad non-alphanumeric archive label "{label}".')
+                log_error(f'Bad non-alphanumeric archive tag "{tag}".')
 
 
 class Archiver:
@@ -72,13 +72,11 @@ class Archiver:
     def __init__(self,
                  source_name: Text = None,
                  archive_folder: Text = None,
-                 labels: Text = None,
                  verbose: bool = False,
                  dry_run: bool = False
                  ):
         self._source_name = source_name
         self.archive_folder = os.path.abspath(archive_folder or DEFAULT_ARCHIVE_FOLDER)
-        self.labels: List[Text] = list(_labels_from_string(labels))
         self.verbose = verbose
         self.dry_run = dry_run
 
@@ -89,12 +87,27 @@ class Archiver:
     def save_archive(self,
                      source_folder: Text,
                      method_name: Text,
+                     tags: Text = None,
                      pending: bool = False,
                      gitignore: bool = False,
                      excludes: List[Text] = None,
                      timestamp: bool = False,
                      progress: bool = False,
                      keep_list: bool = False):
+        """
+        Save an archive of a source folder.
+
+        :param source_folder: source folder for filtering archives
+        :param method_name: archive method name
+        :param tags: optional tags to assign to archive (added to file name)
+        :param pending: locally-modified source repository files only if True
+        :param gitignore: obey .gitignore exclusions if True
+        :param excludes: file exclusion patterns
+        :param timestamp: assign time stamp to archive (added to file name)
+        :param progress: show progress if True
+        :param keep_list: do not delete temporary file list file if True
+        """
+        tag_list: List[Text] = list(_tags_from_string(tags))
         registered_method = METHOD_MAP.get(method_name)
         if not registered_method:
             raise RuntimeError(f'Bad archive method name "{method_name}".')
@@ -104,8 +117,8 @@ class Archiver:
             name_parts = [self.source_name]
             if timestamp:
                 name_parts.append(strftime(TIMESTAMP_FORMAT))
-            if self.labels:
-                name_parts.extend(self.labels)
+            if tag_list:
+                name_parts.extend(tag_list)
             full_folder_path = os.path.join(self.archive_folder, '_'.join(name_parts))
             source_file_iterator = iterate_filtered_files(source_folder,
                                                           pending=pending,
@@ -200,13 +213,23 @@ class Archiver:
                                         file_name=os.path.basename(base_path))
         return None
 
-    def list_catalog(self, source_folder: Text) -> List[CatalogItem]:
+    def list_catalog(self,
+                     source_folder: Text,
+                     timestamp_min: float = None,
+                     timestamp_max: float = None,
+                     tags: Collection[Text] = None,
+                     ) -> List[CatalogItem]:
         """
         List catalog archives.
 
         :param source_folder: source folder for filtering archives
+        :param timestamp_min: earliest time stamp to accept
+        :param timestamp_max: latest time stamp to accept
+        :param tags: optional tags for filtering catalog archives (all are required)
         :return: found catalog items
         """
+        # Convert max/min age deltas to min/max times.
+        filter_tag_set: Optional[Set[Text]] = set(tags) if tags else None
         if not os.path.isdir(self.archive_folder):
             log_error(f'Catalog folder does not exist.', self.archive_folder)
             return []
@@ -220,35 +243,46 @@ class Archiver:
             # See if there's a method to handle it.
             archive_path = os.path.join(self.archive_folder, file_name)
             applicable_method = self.method_for_archive(archive_path)
-            if applicable_method:
-                # Check if it matches the source name.
-                name_parts = applicable_method.file_name.split('_')
-                if name_parts[0] == self.source_name:
-                    file_stat = os.stat(archive_path)
-                    file_time = file_stat.st_mtime
-                    labels: List[Text] = []
-                    if len(name_parts) >= 2:
-                        timestamp_matched = TIMESTAMP_REGEX.match(name_parts[1])
-                        if timestamp_matched:
-                            file_time = mktime((
-                                int(timestamp_matched.group('year')),
-                                int(timestamp_matched.group('month')),
-                                int(timestamp_matched.group('day')),
-                                int(timestamp_matched.group('hours')),
-                                int(timestamp_matched.group('minutes')),
-                                int(timestamp_matched.group('seconds')),
-                                0, 0, -1))
-                            raw_labels = name_parts[2:]
-                        else:
-                            raw_labels = name_parts[1:]
-                        labels = sorted(list(
-                            set([label for label in raw_labels if label.isalnum()])))
-                    items.append(CatalogItem(file_name=file_name,
-                                             method_name=applicable_method.method_name,
-                                             folder=self.archive_folder,
-                                             labels=labels,
-                                             size=file_stat.st_size,
-                                             time=file_time))
+            if not applicable_method:
+                continue
+            # Check if it matches the source name.
+            name_parts = applicable_method.file_name.split('_')
+            if name_parts[0] != self.source_name:
+                continue
+            # Examine physical file and parse name to gather relevant data.
+            file_stat = os.stat(archive_path)
+            file_time = file_stat.st_mtime
+            item_tags: List[Text] = []
+            if len(name_parts) >= 2:
+                timestamp_matched = TIMESTAMP_REGEX.match(name_parts[1])
+                if timestamp_matched:
+                    file_time = mktime((
+                        int(timestamp_matched.group('year')),
+                        int(timestamp_matched.group('month')),
+                        int(timestamp_matched.group('day')),
+                        int(timestamp_matched.group('hours')),
+                        int(timestamp_matched.group('minutes')),
+                        int(timestamp_matched.group('seconds')),
+                        0, 0, -1))
+                    raw_tags = name_parts[2:]
+                else:
+                    raw_tags = name_parts[1:]
+                item_tags = sorted(list(
+                    set([tag for tag in raw_tags if tag.isalnum()])))
+            # Run the archive through the gauntlet of optional filters.
+            if timestamp_min is not None and file_time < timestamp_min:
+                continue
+            if timestamp_max is not None and file_time > timestamp_max:
+                continue
+            if filter_tag_set and not filter_tag_set.issubset(item_tags):
+                continue
+            # This archive is a keeper.
+            items.append(CatalogItem(file_name=file_name,
+                                     method_name=applicable_method.method_name,
+                                     folder=self.archive_folder,
+                                     tags=item_tags,
+                                     size=file_stat.st_size,
+                                     time=file_time))
         return sorted(items, key=lambda item: item.time, reverse=True)
 
 
@@ -273,7 +307,6 @@ def get_method_names() -> List[Text]:
 
 def create_archiver(source_name: Text = None,
                     archive_folder: Text = None,
-                    labels: Text = None,
                     verbose: bool = False,
                     dry_run: bool = False
                     ) -> Archiver:
@@ -282,13 +315,11 @@ def create_archiver(source_name: Text = None,
 
     :param source_name: base archive name
     :param archive_folder: archive container folder
-    :param labels: optional comma-separated labels
     :param verbose: display extra messages if True
     :param dry_run: perform dry run if True
     :return: archiver object
     """
     return Archiver(source_name=source_name,
                     archive_folder=archive_folder,
-                    labels=labels,
                     verbose=verbose,
                     dry_run=dry_run)
