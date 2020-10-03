@@ -43,18 +43,15 @@ from tzar import TzarTaskRunner
         },
     },
     common_options=['ARCHIVE_FOLDER', 'SOURCE_NAME', 'METHOD', 'TAGS'],
-    common_arguments=['SOURCE_FOLDER*'],
+    common_arguments=['SOURCE_FOLDER?'],
 )
 def task_save(runner: TzarTaskRunner):
-    for source_folder in runner.args.SOURCE_FOLDER or [os.getcwd()]:
-        archiver = runner.create_archiver(source_name=runner.args.SOURCE_NAME,
-                                          source_folder=source_folder,
-                                          archive_folder=runner.args.ARCHIVE_FOLDER)
-        archiver.save_archive(runner.args.METHOD,
-                              gitignore=runner.args.GITIGNORE,
-                              excludes=runner.args.EXCLUDE,
-                              pending=runner.args.PENDING,
-                              timestamp=not runner.args.DISABLE_TIMESTAMP,
-                              progress=runner.args.PROGRESS,
-                              keep_list=runner.args.KEEP_LIST,
-                              tags=runner.args.TAGS)
+    archiver = runner.create_archiver()
+    archiver.save_archive(runner.args.METHOD,
+                          gitignore=runner.args.GITIGNORE,
+                          excludes=runner.args.EXCLUDE,
+                          pending=runner.args.PENDING,
+                          timestamp=not runner.args.DISABLE_TIMESTAMP,
+                          progress=runner.args.PROGRESS,
+                          keep_list=runner.args.KEEP_LIST,
+                          tags=runner.args.TAGS)

@@ -86,8 +86,10 @@ class TzarTaskRunner(TaskRunner):
 
         :return: source folder or None
         """
-        return (getattr(self.args, 'SOURCE_FOLDER', None)
-                or os.getcwd())
+        value = getattr(self.args, 'SOURCE_FOLDER', None)
+        if value is not None and not isinstance(value, str):
+            raise ValueError(f'SOURCE_FOLDER {value} is not a single string value.')
+        return value or os.getcwd()
 
     @property
     def archive_folder(self) -> Optional[Text]:

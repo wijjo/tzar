@@ -71,7 +71,7 @@ class DiscoveredArchive:
                         int(timestamp_matched.group('minutes')),
                         int(timestamp_matched.group('seconds')),
                         0, 0, -1))
-                    # Expect zero or one name parts for tags, but handle more.
+                    # Handles both comma and underscore-separated tags.
                     raw_tags = ','.join(name_parts[2:])
                 else:
                     raw_tags = ','.join(name_parts[1:])
