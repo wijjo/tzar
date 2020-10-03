@@ -7,6 +7,7 @@ from jiig import task
 from jiig.utility.general import format_table
 
 from tzar import TzarTaskRunner, MethodListItem
+from tzar.archiver import list_archive
 
 
 @task(
@@ -20,9 +21,8 @@ def task_list(runner: TzarTaskRunner):
         file_size = runner.format_size(item.size)
         file_time = strftime('%c', localtime(item.time))
         return file_size, file_time, item.path
-    archiver = runner.create_archiver()
     for archive_path in runner.args.ARCHIVE_PATH:
-        archive_items = archiver.list_archive(archive_path)
+        archive_items = list_archive(archive_path)
         for line in format_table(*[_item_tuple(item) for item in archive_items],
                                  headers=['size', 'date/time', 'path']):
             print(line)

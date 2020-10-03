@@ -26,6 +26,8 @@ from tzar import TzarTaskRunner, CatalogItem
         'ARCHIVE_FOLDER',
         'DATE_MAX',
         'DATE_MIN',
+        'INTERVAL_MAX',
+        'INTERVAL_MIN',
         'SIZE_UNIT_BINARY',
         'SIZE_UNIT_DECIMAL',
         'SOURCE_NAME',
@@ -34,8 +36,6 @@ from tzar import TzarTaskRunner, CatalogItem
     ],
 )
 def task_catalog(runner: TzarTaskRunner):
-    archiver = runner.create_archiver(source_name=runner.args.SOURCE_NAME,
-                                      archive_folder=runner.args.ARCHIVE_FOLDER)
 
     def _get_headers() -> Iterator[Text]:
         yield 'date/time'
@@ -54,10 +54,7 @@ def task_catalog(runner: TzarTaskRunner):
             yield short_path(item.file_name, is_folder=os.path.isdir(item.file_path))
 
     def _get_rows() -> Iterator[Tuple[Text]]:
-        for item in archiver.list_catalog(runner.args.SOURCE_FOLDER,
-                                          timestamp_min=runner.timestamp_min,
-                                          timestamp_max=runner.timestamp_max,
-                                          tags=runner.tags):
+        for item in runner.list_catalog():
             yield list(_get_columns(item))
 
     for line in format_table(*_get_rows(), headers=list(_get_headers())):

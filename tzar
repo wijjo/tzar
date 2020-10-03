@@ -56,8 +56,8 @@ jiig.tool(
             'dest': 'AGE_MIN',
             'help': 'minimum archive age',
             'epilog': '''
-        Age strings are one or more age values separated by '+'. An age value is a
-        number trailed by a "ymwdHMS" unit letter. Multiple values are summed.
+Age strings are one or more summed values separated by '+'. A value is a number
+trailed by a "ymwdHMS" unit letter.
         '''
         },
         '--age-max': {
@@ -71,6 +71,19 @@ jiig.tool(
         '--date-max': {
             'dest': 'DATE_MAX',
             'help': 'maximum (most recent) archive date',
+        },
+        '--interval-max': {
+            'dest': 'INTERVAL_MAX',
+            'help': 'maximum interval (n[HMS]) between saves to consider',
+        },
+        '--interval-min': {
+            'dest': 'INTERVAL_MIN',
+            'help': 'minimum interval (n[HMS]) between saves to consider',
+        },
+        '--no-confirmation': {
+            'dest': 'NO_CONFIRMATION',
+            'action': 'store_true',
+            'help': 'execute destructive actions without prompting for confirmation',
         },
         '--size-unit-binary': {
             'dest': 'SIZE_UNIT_BINARY',
@@ -86,5 +99,5 @@ jiig.tool(
 )
 
 # With common options/arguments registered, tasks can be registered also.
-from jiig.tasks import alias, help, venv                            # noqa
+from jiig.tasks import alias, help, unittest, venv                  # noqa
 from tzar.tasks import catalog, compare, delete, list, prune, save  # noqa

@@ -1,14 +1,16 @@
 """Tzar-specific task runner."""
 
+import os
 from time import mktime
 from typing import Text, Optional, Tuple, List, Callable
 
 from jiig import runner_factory, TaskRunner, RunnerData
 from jiig.utility.console import log_error
-from jiig.utility.date_time import parse_date_time, apply_date_time_delta_string
+from jiig.utility.date_time import parse_date_time, apply_date_time_delta_string, parse_time_interval
 from jiig.utility.general import format_byte_count
 
-from tzar import archiver
+from tzar import archiver, CatalogItem
+from tzar.constants import DEFAULT_ARCHIVE_FOLDER
 
 
 class TzarTaskRunner(TaskRunner):
@@ -68,6 +70,36 @@ class TzarTaskRunner(TaskRunner):
         return timestamp_result
 
     @property
+    def source_name(self) -> Optional[Text]:
+        """
+        Get source name from options, if available.
+
+        :return: source name or None
+        """
+        return (getattr(self.args, 'SOURCE_NAME', None)
+                or os.path.basename(self.source_folder))
+
+    @property
+    def source_folder(self) -> Optional[Text]:
+        """
+        Get source folder from options, if available.
+
+        :return: source folder or None
+        """
+        return (getattr(self.args, 'SOURCE_FOLDER', None)
+                or os.getcwd())
+
+    @property
+    def archive_folder(self) -> Optional[Text]:
+        """
+        Get archive folder from options, if available.
+
+        :return: archive folder or None
+        """
+        return (getattr(self.args, 'ARCHIVE_FOLDER', None)
+                or DEFAULT_ARCHIVE_FOLDER)
+
+    @property
     def timestamp_min(self) -> Optional[float]:
         """
         Determine minimum (earliest) time stamp based on DATE_MIN/AGE_MAX args.
@@ -86,6 +118,24 @@ class TzarTaskRunner(TaskRunner):
         return self._get_date_age_timestamp('DATE_MAX', 'AGE_MIN', min)
 
     @property
+    def interval_min(self) -> Optional[float]:
+        """
+        Convert an INTERVAL_MIN arg value to float seconds, if available.
+
+        :return: minimum interval seconds or None
+        """
+        return parse_time_interval(self.args.INTERVAL_MIN)
+
+    @property
+    def interval_max(self) -> Optional[float]:
+        """
+        Convert an INTERVAL_MAX arg value to float seconds, if available.
+
+        :return: maximum interval seconds or None
+        """
+        return parse_time_interval(self.args.INTERVAL_MAX)
+
+    @property
     def tags(self) -> Optional[Tuple[Text]]:
         tag_tuple: Optional[Tuple[Text]] = None
         if 'TAGS' in self.args:
@@ -95,23 +145,32 @@ class TzarTaskRunner(TaskRunner):
                 tag_tuple = tuple(tag_list)
         return tag_tuple
 
-    def create_archiver(self,
-                        source_name: Text = None,
-                        archive_folder: Text = None,
-                        ) -> archiver.Archiver:
+    def create_archiver(self) -> archiver.Archiver:
         """
-        Pass-through to archiver.create_archiver().
+        Pass-through to archiver.create_archiver() that uses standard Tzar options.
 
         Applies verbose and dry_run options.
 
-        :param source_name: base archive name
-        :param archive_folder: archive container folder
         :return: archiver object
         """
-        return archiver.create_archiver(source_name=source_name,
-                                        archive_folder=archive_folder,
+        return archiver.create_archiver(self.source_name,
+                                        self.source_folder,
+                                        self.archive_folder,
                                         verbose=self.verbose,
                                         dry_run=self.dry_run)
+
+    def list_catalog(self) -> List[CatalogItem]:
+        """
+        Create an archiver and list the catalog using relevant Tzar options.
+
+        :return: catalog item list
+        """
+        return self.create_archiver().list_catalog(
+            timestamp_min=self.timestamp_min,
+            timestamp_max=self.timestamp_max,
+            interval_min=self.interval_min,
+            interval_max=self.interval_max,
+            tags=self.tags)
 
 
 @runner_factory()

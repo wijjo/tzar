@@ -63,6 +63,16 @@ class ArchiveMethodBase:
     """Base archive method class."""
 
     @classmethod
+    def handle_get_name(cls, archive_name: Text) -> Text:
+        """
+        Required override to isolate base archive name and strip any extension as needed.
+
+        :param archive_name: archive file name
+        :return: stripped name suitable for further parsing
+        """
+        raise NotImplementedError
+
+    @classmethod
     def handle_save(cls, save_data: MethodSaveData) -> MethodSaveResult:
         """
         Required override for saving an archive.
@@ -85,11 +95,15 @@ class ArchiveMethodBase:
         raise NotImplementedError
 
     @classmethod
-    def check_supported(cls, archive_path: Text) -> Optional[Text]:
+    def check_supported(cls,
+                        archive_path: Text,
+                        assumed_type: int = None,
+                        ) -> Optional[Text]:
         """
         Required override for testing if an archive is handled by a particular method.
 
         :param archive_path: path of archive file or folder
+        :param assumed_type: For testing, 1=file, 2=folder, None=check physical object
         :return: base filename or path if it is handled or None if it is not
         """
         raise NotImplementedError

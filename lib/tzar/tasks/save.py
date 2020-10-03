@@ -46,11 +46,11 @@ from tzar import TzarTaskRunner
     common_arguments=['SOURCE_FOLDER*'],
 )
 def task_save(runner: TzarTaskRunner):
-    archiver = runner.create_archiver(source_name=runner.args.SOURCE_NAME,
-                                      archive_folder=runner.args.ARCHIVE_FOLDER)
     for source_folder in runner.args.SOURCE_FOLDER or [os.getcwd()]:
-        archiver.save_archive(source_folder,
-                              runner.args.METHOD,
+        archiver = runner.create_archiver(source_name=runner.args.SOURCE_NAME,
+                                          source_folder=source_folder,
+                                          archive_folder=runner.args.ARCHIVE_FOLDER)
+        archiver.save_archive(runner.args.METHOD,
                               gitignore=runner.args.GITIGNORE,
                               excludes=runner.args.EXCLUDE,
                               pending=runner.args.PENDING,

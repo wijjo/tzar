@@ -56,3 +56,19 @@ def handle_tarball_list(archive_path: Text,
         for info in tar_file.getmembers():
             file_size = info.size if not info.isdir() else None
             yield MethodListItem(path=info.name, time=info.mtime, size=file_size)
+
+
+def handle_tarball_get_name(archive_name: Text,
+                            extension: Text = None,
+                            ) -> Text:
+    """
+    Implementation to preprocess archive name for further parsing.
+
+    :param archive_name: archive file name
+    :param extension: optional extension without leading '.' appended to ".tar"
+    :return: stripped name suitable for further parsing
+    """
+    full_extension = f'.tar.{extension}'
+    if archive_name.endswith(full_extension):
+        return archive_name[:-len(full_extension)]
+    return archive_name
