@@ -170,6 +170,10 @@ class CatalogItem:
     time: float
 
     @property
+    def file_name(self) -> Text:
+        return os.path.basename(self.path)
+
+    @property
     def time_struct(self) -> struct_time:
         return localtime(self.time)
 

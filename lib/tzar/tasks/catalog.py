@@ -51,7 +51,7 @@ def task_catalog(runner: TzarTaskRunner):
         yield ','.join(item.tags)
         if runner.args.LONG_FORMAT:
             yield runner.format_size(item.size)
-            yield short_path(item.file_name, is_folder=os.path.isdir(item.file_path))
+            yield short_path(item.file_name, is_folder=os.path.isdir(item.path))
 
     def _get_rows() -> Iterator[Tuple[Text]]:
         for item in runner.list_catalog():

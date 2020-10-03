@@ -68,7 +68,10 @@ class ArchiveMethodZip(ArchiveMethodBase):
         :param assumed_type: For testing, 1=file, 2=folder, None=check physical object
         :return: base filename or path if it is handled or None if it is not
         """
-        if assumed_type != 1 or (assumed_type is None and not os.path.isfile(archive_path)):
+        if assumed_type is None:
+            if not os.path.isfile(archive_path):
+                return None
+        elif assumed_type != 1:
             return None
         if not archive_path.endswith('.zip'):
             return None
