@@ -57,5 +57,8 @@ def task_catalog(runner: TzarTaskRunner):
         for item in runner.list_catalog():
             yield list(_get_columns(item))
 
+    print(f'''
+::: {runner.source_name} archive catalog from "{runner.archive_folder}" :::
+''')
     for line in format_table(*_get_rows(), headers=list(_get_headers())):
         print(line)
