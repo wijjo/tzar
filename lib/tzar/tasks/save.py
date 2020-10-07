@@ -1,7 +1,5 @@
 """Tzar save command."""
 
-import os
-
 from jiig import task
 
 from tzar import TzarTaskRunner

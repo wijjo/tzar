@@ -8,7 +8,7 @@ from tzar import TzarTaskRunner
 @task(
     'delete',
     help='delete archive(s)',
-    common_options=['ARCHIVE_PATH+'],
+    common_arguments=['ARCHIVE_PATH+'],
 )
 def task_delete(_runner: TzarTaskRunner):
     pass
