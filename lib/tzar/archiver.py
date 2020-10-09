@@ -1,6 +1,5 @@
 """Generic archiver to drive selected archive method."""
 
-from __future__ import annotations
 import os
 from dataclasses import dataclass
 from glob import glob
@@ -103,7 +102,7 @@ class DiscoveredArchive:
         raise ValueError(f'No suitable archive method for "{archive_path}".')
 
     @classmethod
-    def new(cls, path: Text) -> DiscoveredArchive:
+    def new(cls, path: Text) -> 'DiscoveredArchive':
         """
         Create DiscoveredArchive for physical file or folder.
 
@@ -123,7 +122,7 @@ class DiscoveredArchive:
     def new_fake_file(cls,
                       path: Text,
                       file_size: int,
-                      file_time: float) -> DiscoveredArchive:
+                      file_time: float) -> 'DiscoveredArchive':
         """
         Create DiscoveredArchive for fake file.
 
@@ -143,7 +142,7 @@ class DiscoveredArchive:
     @classmethod
     def new_fake_folder(cls,
                         path: Text,
-                        file_time: float) -> DiscoveredArchive:
+                        file_time: float) -> 'DiscoveredArchive':
         """
         Create DiscoveredArchive for fake folder.
 
