@@ -54,15 +54,12 @@ jiig.tool(
         },
         '--age-min': {
             'dest': 'AGE_MIN',
-            'help': 'minimum archive age',
-            'epilog': '''
-Age strings are one or more summed values separated by '+'. A value is a number
-trailed by a "ymwdHMS" unit letter.
-        '''
+            'help': 'minimum archive age [age_option]',
         },
         '--age-max': {
             'dest': 'AGE_MAX',
-            'help': 'maximum archive age',
+            'help': 'maximum archive age [age_option]',
+            'common_footnotes': 'age options',
         },
         '--date-min': {
             'dest': 'DATE_MIN',
@@ -96,6 +93,13 @@ trailed by a "ymwdHMS" unit letter.
             'help': 'format size as decimal 1000-based KB, MB, etc.',
         },
     },
+    common_footnotes={
+        'age_option': '''
+Age strings are one or more summed values separated by '+'. A value is a number
+trailed by a "ymwdHMS" unit letter.
+''',
+        'destructive': 'Destructive operations require confirmation by default.',
+    }
 )
 
 # With common options/arguments registered, tasks can be registered also.

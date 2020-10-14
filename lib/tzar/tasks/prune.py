@@ -14,8 +14,7 @@ from tzar import TzarTaskRunner
 
 @task(
     'prune',
-    help='prune archives to save space',
-    epilog='All destructive operations require confirmation by default.',
+    help='prune archives to save space [destructive]',
     common_options=['AGE_MAX',
                     'AGE_MIN',
                     'ARCHIVE_FOLDER',
