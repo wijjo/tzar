@@ -13,8 +13,8 @@ from tzar.archiver import list_archive
 @task(
     'list',
     help='list archive contents',
-    common_options=['SIZE_UNIT_BINARY', 'SIZE_UNIT_DECIMAL'],
-    common_arguments=['ARCHIVE_PATH+']
+    options=['SIZE_UNIT_BINARY', 'SIZE_UNIT_DECIMAL'],
+    arguments=['ARCHIVE_PATH+']
 )
 def task_list(runner: TzarTaskRunner):
     def _item_tuple(item: MethodListItem) -> Tuple[Text, Text, Text]:

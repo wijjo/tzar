@@ -13,14 +13,11 @@ from tzar import TzarTaskRunner, CatalogItem
 @task(
     'catalog',
     help='manage and view archive catalog folders',
-    options={
-        ('-l', '--long'): {
+    options=[
+        (('-l', '--long'), {
             'dest': 'LONG_FORMAT',
             'action': 'store_true',
-            'help': 'long format to display extra information',
-        },
-    },
-    common_options=[
+            'help': 'long format to display extra information'}),
         'AGE_MAX',
         'AGE_MIN',
         'ARCHIVE_FOLDER',

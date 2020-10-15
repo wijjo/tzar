@@ -8,40 +8,39 @@ from tzar import TzarTaskRunner
 @task(
     'save',
     help='save an archive of the working folder',
-    options={
-        ('-e', '--exclude'): {
+    options=[
+        (['-e', '--exclude'], {
             'dest': 'EXCLUDE',
             'nargs': '*',
-            'help': 'exclusion pattern(s), including gitignore-style wildcards',
-        },
-        ('-p', '--progress'): {
+            'help': 'exclusion pattern(s), including gitignore-style wildcards'}),
+        (['-p', '--progress'], {
             'dest': 'PROGRESS',
             'action': 'store_true',
-            'help': 'display progress statistics'
-        },
-        ('-T', '--no-timestamp'): {
+            'help': 'display progress statistics'}),
+        (['-T', '--no-timestamp'], {
             'dest': 'DISABLE_TIMESTAMP',
             'action': 'store_true',
-            'help': f'disable adding timestamp to name',
-        },
-        '--gitignore': {
+            'help': f'disable adding timestamp to name'}),
+        ('--gitignore', {
             'dest': 'GITIGNORE',
             'action': 'store_true',
-            'help': 'use .gitignore exclusions',
-        },
-        '--keep-list': {
+            'help': 'use .gitignore exclusions'}),
+        ('--keep-list', {
             'dest': 'KEEP_LIST',
             'action': 'store_true',
-            'help': 'do not delete temporary file list when done',
-        },
-        '--pending': {
+            'help': 'do not delete temporary file list when done'}),
+        ('--pending', {
             'dest': 'PENDING',
             'action': 'store_true',
-            'help': 'save only modified version-controlled files',
-        },
-    },
-    common_options=['ARCHIVE_FOLDER', 'SOURCE_NAME', 'METHOD', 'TAGS'],
-    common_arguments=['SOURCE_FOLDER?'],
+            'help': 'save only modified version-controlled files'}),
+        'ARCHIVE_FOLDER',
+        'SOURCE_NAME',
+        'METHOD',
+        'TAGS'
+    ],
+    arguments=[
+        'SOURCE_FOLDER?'
+    ],
 )
 def task_save(runner: TzarTaskRunner):
     archiver = runner.create_archiver()
