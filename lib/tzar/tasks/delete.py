@@ -9,7 +9,7 @@ from tzar import TzarTaskRunner
     'delete',
     help='delete archive(s) [destructive]',
     arguments=[
-        'ARCHIVE_PATH+'
+        'ARCHIVE_PATH+',
     ],
 )
 def task_delete(_runner: TzarTaskRunner):

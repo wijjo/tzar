@@ -24,74 +24,44 @@ jiig.tool(
     description='Simple archive manager.',
 
     # Defines both common options and arguments (used without flag key).
-    common_options=[
-        (['-a', '--archive'], {
-            'dest': 'ARCHIVE_PATH',
-            'help': 'path to source archive file or folder',
-        }),
-        (['-f', '--archive-folder'], {
-            'dest': 'ARCHIVE_FOLDER',
-            'default': DEFAULT_ARCHIVE_FOLDER,
-            'help': f'archive folder (default: "{DEFAULT_ARCHIVE_FOLDER}")',
-        }),
-        (['-m', '--method'], {
-            'dest': 'METHOD',
-            'choices': get_method_names(),
-            'default': DEFAULT_METHOD,
-            'help': f'archive method (default: "{DEFAULT_METHOD}")',
-        }),
-        (['-n', '--name'], {
-            'dest': 'SOURCE_NAME',
-            'help': 'source name (default: working folder name)',
-        }),
-        (['-s', '--source-folder'], {
-            'dest': 'SOURCE_FOLDER',
-            'help': 'source folder (default: working folder)',
-        }),
-        (['-t', '--tags'], {
-            'dest': 'TAGS',
-            'help': 'comma-separated archive tags',
-        }),
-        ('--age-min', {
-            'dest': 'AGE_MIN',
-            'help': 'minimum archive age [age_option]',
-        }),
-        ('--age-max', {
-            'dest': 'AGE_MAX',
-            'help': 'maximum archive age [age_option]',
-            'common_footnotes': 'age options',
-        }),
-        ('--date-min', {
-            'dest': 'DATE_MIN',
-            'help': 'minimum (earliest) archive date',
-        }),
-        ('--date-max', {
-            'dest': 'DATE_MAX',
-            'help': 'maximum (most recent) archive date',
-        }),
-        ('--interval-max', {
-            'dest': 'INTERVAL_MAX',
-            'help': 'maximum interval (n[HMS]) between saves to consider',
-        }),
-        ('--interval-min', {
-            'dest': 'INTERVAL_MIN',
-            'help': 'minimum interval (n[HMS]) between saves to consider',
-        }),
-        ('--no-confirmation', {
-            'dest': 'NO_CONFIRMATION',
-            'action': 'store_true',
-            'help': 'execute destructive actions without prompting for confirmation',
-        }),
-        ('--size-unit-binary', {
-            'dest': 'SIZE_UNIT_BINARY',
-            'action': 'store_true',
-            'help': 'format size as binary 1024-based KiB, MiB, etc.',
-        }),
-        ('--size-unit-decimal', {
-            'dest': 'SIZE_UNIT_DECIMAL',
-            'action': 'store_true',
-            'help': 'format size as decimal 1000-based KB, MB, etc.',
-        }),
+    common_arguments=[
+        {'dest': 'ARCHIVE_PATH',
+         'help': 'path to source archive file or folder'},
+        {'dest': 'ARCHIVE_FOLDER',
+         'default': DEFAULT_ARCHIVE_FOLDER,
+         'help': f'archive folder (default: "{DEFAULT_ARCHIVE_FOLDER}")'},
+        {'dest': 'METHOD',
+         'choices': get_method_names(),
+         'default': DEFAULT_METHOD,
+         'help': f'archive method (default: "{DEFAULT_METHOD}")'},
+        {'dest': 'SOURCE_NAME',
+         'help': 'source name (default: working folder name)'},
+        {'dest': 'SOURCE_FOLDER',
+         'help': 'source folder (default: working folder)'},
+        {'dest': 'TAGS',
+         'help': 'comma-separated archive tags'},
+        {'dest': 'AGE_MIN',
+         'help': 'minimum archive age [age_option]'},
+        {'dest': 'AGE_MAX',
+         'help': 'maximum archive age [age_option]',
+         'common_footnotes': 'age options'},
+        {'dest': 'DATE_MIN',
+         'help': 'minimum (earliest) archive date'},
+        {'dest': 'DATE_MAX',
+         'help': 'maximum (most recent) archive date'},
+        {'dest': 'INTERVAL_MAX',
+         'help': 'maximum interval (n[HMS]) between saves to consider'},
+        {'dest': 'INTERVAL_MIN',
+         'help': 'minimum interval (n[HMS]) between saves to consider'},
+        {'dest': 'NO_CONFIRMATION',
+         'action': 'store_true',
+         'help': 'execute destructive actions without prompting for confirmation'},
+        {'dest': 'SIZE_UNIT_BINARY',
+         'action': 'store_true',
+         'help': 'format size as binary 1024-based KiB, MiB, etc.'},
+        {'dest': 'SIZE_UNIT_DECIMAL',
+         'action': 'store_true',
+         'help': 'format size as decimal 1000-based KB, MB, etc.'},
     ],
     common_footnotes={
         'age_option': '''
