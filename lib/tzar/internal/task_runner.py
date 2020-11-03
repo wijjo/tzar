@@ -7,10 +7,10 @@ from typing import Text, Optional, Tuple, List, Callable
 from jiig import runner_factory, TaskRunner, RunnerData
 from jiig.utility.console import log_error
 from jiig.utility.date_time import parse_date_time, apply_date_time_delta_string, parse_time_interval
-from jiig.utility.general import format_byte_count
+from jiig.utility.general import format_human_byte_count
 
-from tzar import archiver, CatalogItem
-from tzar.constants import DEFAULT_ARCHIVE_FOLDER
+from .archiver import Archiver, create_archiver, CatalogItem
+from .constants import DEFAULT_ARCHIVE_FOLDER
 
 
 class TzarTaskRunner(TaskRunner):
@@ -43,9 +43,9 @@ class TzarTaskRunner(TaskRunner):
             unit_format = 'd'
         else:
             unit_format = None
-        return format_byte_count(byte_count,
-                                 unit_format=unit_format,
-                                 decimal_places=decimal_places)
+        return format_human_byte_count(byte_count,
+                                       unit_format=unit_format,
+                                       decimal_places=decimal_places)
 
     def _get_date_age_timestamp(self,
                                 date_name: Text,
@@ -147,7 +147,7 @@ class TzarTaskRunner(TaskRunner):
                 tag_tuple = tuple(tag_list)
         return tag_tuple
 
-    def create_archiver(self) -> archiver.Archiver:
+    def create_archiver(self) -> Archiver:
         """
         Pass-through to archiver.create_archiver() that uses standard Tzar options.
 
@@ -155,11 +155,11 @@ class TzarTaskRunner(TaskRunner):
 
         :return: archiver object
         """
-        return archiver.create_archiver(self.source_name,
-                                        self.source_folder,
-                                        self.archive_folder,
-                                        verbose=self.verbose,
-                                        dry_run=self.dry_run)
+        return create_archiver(self.source_name,
+                               self.source_folder,
+                               self.archive_folder,
+                               verbose=self.verbose,
+                               dry_run=self.dry_run)
 
     def list_catalog(self) -> List[CatalogItem]:
         """

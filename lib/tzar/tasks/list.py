@@ -3,23 +3,22 @@
 from time import localtime, strftime
 from typing import Text, Tuple
 
-from jiig import task
+import jiig
+
 from jiig.utility.general import format_table
 
-from tzar import TzarTaskRunner, MethodListItem
-from tzar.archiver import list_archive
+from tzar.internal.archiver import MethodListItem
+from tzar.internal.task_runner import TzarTaskRunner
+from tzar.internal.archiver import list_archive
+from .arguments import SizeUnitBinaryArg, SizeUnitDecimalArg, ArchivePathArg
 
 
-@task(
+@jiig.task(
     'list',
-    help='list archive contents',
-    arguments=[
-        ('--size-unit-binary',
-         'SIZE_UNIT_BINARY'),
-        ('--size-unit-decimal',
-         'SIZE_UNIT_DECIMAL'),
-        'ARCHIVE_PATH+',
-    ],
+    SizeUnitBinaryArg(),
+    SizeUnitDecimalArg(),
+    ArchivePathArg(positional=True, cardinality='+'),
+    description='List archive contents',
 )
 def task_list(runner: TzarTaskRunner):
     def _item_tuple(item: MethodListItem) -> Tuple[Text, Text, Text]:

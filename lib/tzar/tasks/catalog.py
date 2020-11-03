@@ -3,46 +3,34 @@
 import os
 from typing import Tuple, Text, Iterator
 
-from jiig import task
+import jiig
+
 from jiig.utility.general import format_table
 from jiig.utility.filesystem import short_path
 
-from tzar import TzarTaskRunner, CatalogItem
+from tzar.internal.archiver import CatalogItem
+from tzar.internal.task_runner import TzarTaskRunner
+from .arguments import LongFormatArg, AgeMaxArg, AgeMinArg, ArchiveFolderArg, \
+    DateMaxArg, DateMinArg, IntervalMaxArg, IntervalMinArg, \
+    SizeUnitBinaryArg, SizeUnitDecimalArg, SourceNameArg, SourceFolderArg, TagsArg
 
 
-@task(
+@jiig.task(
     'catalog',
-    help='manage and view archive catalog folders',
-    arguments=[
-        (('-l', '--long'),
-         {'dest': 'LONG_FORMAT',
-          'action': 'store_true',
-          'help': 'long format to display extra information'}),
-        ('--age-max',
-         'AGE_MAX'),
-        ('--age-min',
-         'AGE_MIN'),
-        (['-f', '--archive-folder'],
-         'ARCHIVE_FOLDER'),
-        ('--date-max',
-         'DATE_MAX'),
-        ('--date-min',
-         'DATE_MIN'),
-        ('--interval-max',
-         'INTERVAL_MAX'),
-        ('--interval-min',
-         'INTERVAL_MIN'),
-        ('--size-unit-binary',
-         'SIZE_UNIT_BINARY'),
-        ('--size-unit-decimal',
-         'SIZE_UNIT_DECIMAL'),
-        (['-n', '--name'],
-         'SOURCE_NAME'),
-        (['-s', '--source-folder'],
-         'SOURCE_FOLDER'),
-        (['-t', '--tags'],
-         'TAGS'),
-    ],
+    LongFormatArg(),
+    AgeMaxArg(),
+    AgeMinArg(),
+    ArchiveFolderArg(),
+    DateMaxArg(),
+    DateMinArg(),
+    IntervalMaxArg(),
+    IntervalMinArg(),
+    SizeUnitBinaryArg(),
+    SizeUnitDecimalArg(),
+    SourceNameArg(),
+    SourceFolderArg(),
+    TagsArg(),
+    description='Manage and view archive catalog folders',
 )
 def task_catalog(runner: TzarTaskRunner):
 

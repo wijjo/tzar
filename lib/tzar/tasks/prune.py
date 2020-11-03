@@ -8,41 +8,28 @@ Due to the destructive nature of these actions, an action summary is displayed,
 followed by a confirmation prompt. A NO_CONFIRMATION option can disable the
 confirmation prompt, e.g. for automation scripts.
 """
-from jiig import task
-from tzar import TzarTaskRunner
+
+import jiig
+
+from tzar.internal.task_runner import TzarTaskRunner
+from .arguments import AgeMaxArg, AgeMinArg, ArchiveFolderArg, DateMaxArg, DateMinArg, \
+    IntervalMaxArg, IntervalMinArg, NoConfirmationArg, SourceNameArg, SourceFolderArg, TagsArg
 
 
-@task(
+@jiig.task(
     'prune',
-    help='prune archives to save space [destructive]',
-    arguments=[
-        ('--age-max',
-         'AGE_MAX'),
-        ('--age-min',
-         'AGE_MIN'),
-        (['-f', '--archive-folder'],
-         'ARCHIVE_FOLDER'),
-        ('--date-max',
-         'DATE_MAX'),
-        ('--date-min',
-         'DATE_MIN'),
-        ('--interval-max',
-         'INTERVAL_MAX'),
-        ('--interval-min',
-         'INTERVAL_MIN'),
-        ('--no-confirmation',
-         'NO_CONFIRMATION'),
-        ('--size-unit-binary',
-         'SIZE_UNIT_BINARY'),
-        ('--size-unit-decimal',
-         'SIZE_UNIT_DECIMAL'),
-        (['-n', '--name'],
-         'SOURCE_NAME'),
-        (['-s', '--source-folder'],
-         'SOURCE_FOLDER'),
-        (['-t', '--tags'],
-         'TAGS'),
-    ],
+    AgeMaxArg(),
+    AgeMinArg(),
+    ArchiveFolderArg(),
+    DateMaxArg(),
+    DateMinArg(),
+    IntervalMaxArg(),
+    IntervalMinArg(),
+    NoConfirmationArg(),
+    SourceNameArg(),
+    SourceFolderArg(),
+    TagsArg(),
+    description='Prune archives to save space [destructive]',
 )
 def task_prune(runner: TzarTaskRunner):
     for item in runner.list_catalog():

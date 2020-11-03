@@ -9,10 +9,10 @@ from typing import Text, Dict, Type, List, Optional, Callable, Set, Sequence, It
 
 from jiig.utility.console import abort, log_error, log_message, log_warning
 from jiig.utility.filesystem import chdir, create_folder, short_path, iterate_filtered_files
-from jiig.utility.general import format_byte_count
+from jiig.utility.general import format_human_byte_count
 from jiig.utility.process import shell_command_string
 
-from tzar.constants import TIMESTAMP_FORMAT, TIMESTAMP_REGEX
+from tzar.internal.constants import TIMESTAMP_FORMAT, TIMESTAMP_REGEX
 from tzar.methods.base import MethodSaveData, ArchiveMethodBase, MethodListItem
 
 
@@ -305,7 +305,7 @@ class Archiver:
                 full_command = shell_command_string(*save_data.command_arguments)
                 if self.verbose:
                     log_message('Archive command:', full_command)
-                formatted_bytes = format_byte_count(total_bytes, unit_format='b')
+                formatted_bytes = format_human_byte_count(total_bytes, unit_format='b')
                 log_message(f'Archiving {formatted_bytes}'
                             f' from {total_files} files'
                             f' in {total_folders} folders ...')

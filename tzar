@@ -9,60 +9,16 @@ Jiig-based tool to create and manage archives of the working folder.
 import jiig
 
 # Register custom task runner.
-from tzar.task_runner import create_runner              # noqa
+from tzar.internal.task_runner import create_runner     # noqa
 
 # Common options (below) need to know what methods are available.
 from tzar.methods import gz, files, xz, zip             # noqa
-
-from tzar.constants import DEFAULT_ARCHIVE_FOLDER
-from tzar.archiver import get_method_names, DEFAULT_METHOD
 
 # Register the tool, including common options and arguments. This must occur
 # prior to registering tasks so that common options/arguments are available.
 jiig.tool(
     name='tzar',
-    description='Simple archive manager.',
-
-    # Defines both common options and arguments (used without flag key).
-    common_arguments=[
-        {'dest': 'ARCHIVE_PATH',
-         'help': 'path to source archive file or folder'},
-        {'dest': 'ARCHIVE_FOLDER',
-         'default': DEFAULT_ARCHIVE_FOLDER,
-         'help': f'archive folder (default: "{DEFAULT_ARCHIVE_FOLDER}")'},
-        {'dest': 'METHOD',
-         'choices': get_method_names(),
-         'default': DEFAULT_METHOD,
-         'help': f'archive method (default: "{DEFAULT_METHOD}")'},
-        {'dest': 'SOURCE_NAME',
-         'help': 'source name (default: working folder name)'},
-        {'dest': 'SOURCE_FOLDER',
-         'help': 'source folder (default: working folder)'},
-        {'dest': 'TAGS',
-         'help': 'comma-separated archive tags'},
-        {'dest': 'AGE_MIN',
-         'help': 'minimum archive age [age_option]'},
-        {'dest': 'AGE_MAX',
-         'help': 'maximum archive age [age_option]',
-         'common_footnotes': 'age options'},
-        {'dest': 'DATE_MIN',
-         'help': 'minimum (earliest) archive date'},
-        {'dest': 'DATE_MAX',
-         'help': 'maximum (most recent) archive date'},
-        {'dest': 'INTERVAL_MAX',
-         'help': 'maximum interval (n[HMS]) between saves to consider'},
-        {'dest': 'INTERVAL_MIN',
-         'help': 'minimum interval (n[HMS]) between saves to consider'},
-        {'dest': 'NO_CONFIRMATION',
-         'action': 'store_true',
-         'help': 'execute destructive actions without prompting for confirmation'},
-        {'dest': 'SIZE_UNIT_BINARY',
-         'action': 'store_true',
-         'help': 'format size as binary 1024-based KiB, MiB, etc.'},
-        {'dest': 'SIZE_UNIT_DECIMAL',
-         'action': 'store_true',
-         'help': 'format size as decimal 1000-based KB, MB, etc.'},
-    ],
+    description='Simple archive manager',
     common_footnotes={
         'age_option': '''
 Age strings are one or more summed values separated by '+'. A value is a number

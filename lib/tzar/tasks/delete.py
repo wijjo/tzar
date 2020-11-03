@@ -1,16 +1,15 @@
 """Tzar prune command."""
 
-from jiig import task
+import jiig
 
-from tzar import TzarTaskRunner
+from tzar.internal.task_runner import TzarTaskRunner
+from .arguments import ArchivePathArg
 
 
-@task(
+@jiig.task(
     'delete',
-    help='delete archive(s) [destructive]',
-    arguments=[
-        'ARCHIVE_PATH+',
-    ],
+    ArchivePathArg(positional=True, cardinality='+'),
+    description='Delete archive(s) [destructive]',
 )
 def task_delete(_runner: TzarTaskRunner):
     pass

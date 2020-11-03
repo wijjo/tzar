@@ -3,7 +3,7 @@ from time import strptime, mktime
 import unittest
 from typing import List, Text, Optional
 
-from tzar.archiver import build_catalog_list, DiscoveredArchive
+from tzar.internal.archiver import build_catalog_list, DiscoveredArchive
 
 
 class TestCatalog(unittest.TestCase):
