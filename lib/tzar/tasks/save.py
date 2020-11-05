@@ -1,46 +1,45 @@
 """Tzar save command."""
 
-import jiig
-
+from jiig import task, argument
+from jiig.arg import boolean, text
 from tzar.internal.task_runner import TzarTaskRunner
 
-from .arguments import ArchiveFolderArg, SourceNameArg, MethodArg, TagsArg, SourceFolderArg
+from .arguments import archive_folder_argument, source_name_argument, method_argument, \
+    tags_argument, source_folder_argument
 
 
-@jiig.task(
-    'save',
-    jiig.Arg('EXCLUDE',
-             jiig.arg.String,
-             description='Exclusion pattern(s), including gitignore-style wildcards',
-             cardinality='*',
-             flags=['-e', '--exclude']),
-    jiig.Arg('PROGRESS',
-             jiig.arg.Boolean,
-             description='Display progress statistics',
-             flags=['-p', '--progress']),
-    jiig.Arg('DISABLE_TIMESTAMP',
-             jiig.arg.Boolean,
-             description=f'Disable adding timestamp to name',
-             flags=['-T', '--no-timestamp']),
-    jiig.Arg('GITIGNORE',
-             jiig.arg.Boolean,
-             description='Use .gitignore exclusions',
-             flags='--gitignore'),
-    jiig.Arg('KEEP_LIST',
-             jiig.arg.Boolean,
-             description='Do not delete temporary file list when done',
-             flags='--keep-list'),
-    jiig.Arg('PENDING',
-             jiig.arg.Boolean,
-             description='Save only modified version-controlled files',
-             flags='--pending'),
-    ArchiveFolderArg(),
-    SourceNameArg(),
-    MethodArg(),
-    TagsArg(),
-    SourceFolderArg(cardinality='?'),
-    description='Save an archive of the working folder or another folder',
-)
+@task('save',
+      argument('EXCLUDE',
+               text,
+               description='Exclusion pattern(s), including gitignore-style wildcards',
+               cardinality='*',
+               flags=['-e', '--exclude']),
+      argument('PROGRESS',
+               boolean,
+               description='Display progress statistics',
+               flags=['-p', '--progress']),
+      argument('DISABLE_TIMESTAMP',
+               boolean,
+               description=f'Disable adding timestamp to name',
+               flags=['-T', '--no-timestamp']),
+      argument('GITIGNORE',
+               boolean,
+               description='Use .gitignore exclusions',
+               flags='--gitignore'),
+      argument('KEEP_LIST',
+               boolean,
+               description='Do not delete temporary file list when done',
+               flags='--keep-list'),
+      argument('PENDING',
+               boolean,
+               description='Save only modified version-controlled files',
+               flags='--pending'),
+      archive_folder_argument(),
+      source_name_argument(),
+      method_argument(),
+      tags_argument(),
+      source_folder_argument(cardinality='?'),
+      description='Save an archive of the working folder or another folder')
 def task_save(runner: TzarTaskRunner):
     archiver = runner.create_archiver()
     archiver.save_archive(runner.args.METHOD,

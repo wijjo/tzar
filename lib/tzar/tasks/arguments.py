@@ -1,156 +1,128 @@
-from jiig import Arg
-from jiig.arg import Boolean, DateTime, File, Folder, Integer, Interval, String
-from jiig.arg.argument_type import Cardinality
+import os
+
+from jiig import argument, MappedArgument, Cardinality
+from jiig.arg import boolean, date_time, file_path, folder_path, integer, interval, text
 
 from tzar.internal.archiver import get_method_names, DEFAULT_METHOD
 from tzar.internal.constants import DEFAULT_ARCHIVE_FOLDER
 
 
-class AgeMaxArg(Arg):
-    def __init__(self, positional: bool = False):
-        super().__init__('AGE_MAX',
-                         Integer,
-                         description='Maximum archive age [age_option]',
-                         flags='--age-max',
-                         positional=positional),
+def age_max_argument() -> MappedArgument:
+    return argument('AGE_MAX',
+                    integer,
+                    description='Maximum archive age [age_option]',
+                    flags='--age-max')
 
 
-class AgeMinArg(Arg):
-    def __init__(self, positional: bool = False):
-        super().__init__('AGE_MIN',
-                         Integer,
-                         description='Minimum archive age [age_option]',
-                         flags='--age-min',
-                         positional=positional),
+def age_min_argument() -> MappedArgument:
+    return argument('AGE_MIN',
+                    integer,
+                    description='Minimum archive age [age_option]',
+                    flags='--age-min')
 
 
-class ArchiveFolderArg(Arg):
-    def __init__(self, positional: bool = False):
-        super().__init__('ARCHIVE_FOLDER',
-                         Folder(must_exist=True),
-                         description=f'Archive folder',
-                         default_value=DEFAULT_ARCHIVE_FOLDER,
-                         flags=['-f', '--archive-folder'],
-                         positional=positional),
+def archive_folder_argument() -> MappedArgument:
+    return argument('ARCHIVE_FOLDER',
+                    folder_path(must_exist=True),
+                    description='Archive folder',
+                    default_value=DEFAULT_ARCHIVE_FOLDER,
+                    flags=['-f', '--archive-folder'])
 
 
-class ArchivePathArg(Arg):
-    def __init__(self, positional: bool = False, cardinality: Cardinality = None):
-        super().__init__('ARCHIVE_PATH',
-                         File(must_exist=True, allow_folder=True),
-                         description='Path to source archive file or folder',
-                         flags=['-p', '--archive-path'],
-                         cardinality=cardinality,
-                         positional=positional),
+def archive_path_argument(positional: bool = False, cardinality: Cardinality = None) -> MappedArgument:
+    return argument('ARCHIVE_PATH',
+                    file_path(must_exist=True, allow_folder=True),
+                    description='Path to source archive file or folder',
+                    flags=['-p', '--archive-path'],
+                    cardinality=cardinality,
+                    positional=positional)
 
 
-class DateMaxArg(Arg):
-    def __init__(self, positional: bool = False):
-        super().__init__('DATE_MAX',
-                         DateTime,
-                         description='Maximum (latest) archive date',
-                         flags='--date-max',
-                         positional=positional),
+def date_max_argument() -> MappedArgument:
+    return argument('DATE_MAX',
+                    date_time,
+                    description='Maximum (latest) archive date',
+                    flags='--date-max')
 
 
-class DateMinArg(Arg):
-    def __init__(self, positional: bool = False):
-        super().__init__('DATE_MIN',
-                         DateTime,
-                         description='Minimum (earliest) archive date',
-                         flags='--date-min',
-                         positional=positional),
+def date_min_argument() -> MappedArgument:
+    return argument('DATE_MIN',
+                    date_time,
+                    description='Minimum (earliest) archive date',
+                    flags='--date-min')
 
 
-class IntervalMaxArg(Arg):
-    def __init__(self, positional: bool = False):
-        super().__init__('INTERVAL_MAX',
-                         Interval,
-                         description='Maximum interval (n[HMS]) between saves to consider',
-                         flags='--interval-max',
-                         positional=positional),
+def interval_max_argument() -> MappedArgument:
+    return argument('INTERVAL_MAX',
+                    interval,
+                    description='Maximum interval (n[HMS]) between saves to consider',
+                    flags='--interval-max')
 
 
-class IntervalMinArg(Arg):
-    def __init__(self, positional: bool = False):
-        super().__init__('INTERVAL_MIN',
-                         Interval,
-                         description='Minimum interval (n[HMS]) between saves to consider',
-                         flags='--interval-min',
-                         positional=positional),
+def interval_min_argument() -> MappedArgument:
+    return argument('INTERVAL_MIN',
+                    interval,
+                    description='Minimum interval (n[HMS]) between saves to consider',
+                    flags='--interval-min')
 
 
-class LongFormatArg(Arg):
-    def __init__(self, positional: bool = False):
-        super().__init__('LONG_FORMAT',
-                         Boolean,
-                         description='Long format to display extra information',
-                         flags=['-l', '--long'],
-                         positional=positional),
+def long_format_argument() -> MappedArgument:
+    return argument('LONG_FORMAT',
+                    boolean,
+                    description='Long format to display extra information',
+                    flags=['-l', '--long'])
 
 
-class MethodArg(Arg):
-    def __init__(self, positional: bool = False):
-        super().__init__('METHOD',
-                         String(choices=get_method_names()),
-                         description=f'Archive method',
-                         default_value=DEFAULT_METHOD,
-                         flags=['-m', '--method'],
-                         positional=positional),
+def method_argument() -> MappedArgument:
+    return argument('METHOD',
+                    text,
+                    description=f'Archive method',
+                    default_value=DEFAULT_METHOD,
+                    choices=get_method_names(),
+                    flags=['-m', '--method'])
 
 
-class NoConfirmationArg(Arg):
-    def __init__(self, positional: bool = False):
-        super().__init__('NO_CONFIRMATION',
-                         Boolean,
-                         description='Execute destructive actions without'
-                                     ' prompting for confirmation',
-                         flags='--no-confirmation',
-                         positional=positional),
+def no_confirmation_argument() -> MappedArgument:
+    return argument('NO_CONFIRMATION',
+                    boolean,
+                    description='Execute destructive actions without'
+                                ' prompting for confirmation',
+                    flags='--no-confirmation')
 
 
-class SizeUnitBinaryArg(Arg):
-    def __init__(self, positional: bool = False):
-        super().__init__('SIZE_UNIT_BINARY',
-                         Boolean,
-                         description='Format size as binary 1024-based KiB, MiB, etc.',
-                         flags='--size-unit-binary',
-                         positional=positional),
+def size_unit_binary_argument() -> MappedArgument:
+    return argument('SIZE_UNIT_BINARY',
+                    boolean,
+                    description='Format size as binary 1024-based KiB, MiB, etc.',
+                    flags='--size-unit-binary')
 
 
-class SizeUnitDecimalArg(Arg):
-    def __init__(self, positional: bool = False):
-        super().__init__('SIZE_UNIT_DECIMAL',
-                         Boolean,
-                         description='Format size as decimal 1000-based KB, MB, etc.',
-                         flags='--size-unit-decimal',
-                         positional=positional),
+def size_unit_decimal_argument() -> MappedArgument:
+    return argument('SIZE_UNIT_DECIMAL',
+                    boolean,
+                    description='Format size as decimal 1000-based KB, MB, etc.',
+                    flags='--size-unit-decimal')
 
 
-class SourceFolderArg(Arg):
-    def __init__(self, positional: bool = False, cardinality: Cardinality = None):
-        super().__init__('SOURCE_FOLDER',
-                         Folder(must_exist=True),
-                         description='Source folder',
-                         default_value='.',
-                         flags=['-s', '--source-folder'],
-                         cardinality=cardinality,
-                         positional=positional),
+def source_folder_argument(cardinality: Cardinality = None) -> MappedArgument:
+    return argument('SOURCE_FOLDER',
+                    folder_path(must_exist=True),
+                    description='Source folder',
+                    default_value='.',
+                    flags=['-s', '--source-folder'],
+                    cardinality=cardinality)
 
 
-class SourceNameArg(Arg):
-    def __init__(self, positional: bool = False):
-        super().__init__('SOURCE_NAME',
-                         String,
-                         description='Source name (default: <working folder name>)',
-                         flags=['-n', '--name'],
-                         positional=positional),
+def source_name_argument() -> MappedArgument:
+    return argument('SOURCE_NAME',
+                    text,
+                    description='Source name',
+                    default_value=os.path.basename(os.getcwd()),
+                    flags=['-n', '--name'])
 
 
-class TagsArg(Arg):
-    def __init__(self, positional: bool = False):
-        super().__init__('TAGS',
-                         String,
-                         description='Comma-separated archive tags',
-                         flags=['-t', '--tags'],
-                         positional=positional),
+def tags_argument() -> MappedArgument:
+    return argument('TAGS',
+                    text,
+                    description='Comma-separated archive tags',
+                    flags=['-t', '--tags'])
