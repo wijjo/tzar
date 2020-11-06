@@ -1,128 +1,127 @@
 import os
 
-from jiig import argument, MappedArgument, Cardinality
-from jiig.arg import boolean, date_time, file_path, folder_path, integer, interval, text
+from jiig import arg, argument, Argument, Cardinality
 
 from tzar.internal.archiver import get_method_names, DEFAULT_METHOD
 from tzar.internal.constants import DEFAULT_ARCHIVE_FOLDER
 
 
-def age_max_argument() -> MappedArgument:
+def age_max_argument() -> Argument:
     return argument('AGE_MAX',
-                    integer,
+                    arg.integer,
                     description='Maximum archive age [age_option]',
                     flags='--age-max')
 
 
-def age_min_argument() -> MappedArgument:
+def age_min_argument() -> Argument:
     return argument('AGE_MIN',
-                    integer,
+                    arg.integer,
                     description='Minimum archive age [age_option]',
                     flags='--age-min')
 
 
-def archive_folder_argument() -> MappedArgument:
+def archive_folder_argument() -> Argument:
     return argument('ARCHIVE_FOLDER',
-                    folder_path(must_exist=True),
+                    arg.folder_path(must_exist=True),
                     description='Archive folder',
                     default_value=DEFAULT_ARCHIVE_FOLDER,
                     flags=['-f', '--archive-folder'])
 
 
-def archive_path_argument(positional: bool = False, cardinality: Cardinality = None) -> MappedArgument:
+def archive_path_argument(positional: bool = False, cardinality: Cardinality = None) -> Argument:
     return argument('ARCHIVE_PATH',
-                    file_path(must_exist=True, allow_folder=True),
+                    arg.file_path(must_exist=True, allow_folder=True),
                     description='Path to source archive file or folder',
                     flags=['-p', '--archive-path'],
                     cardinality=cardinality,
                     positional=positional)
 
 
-def date_max_argument() -> MappedArgument:
+def date_max_argument() -> Argument:
     return argument('DATE_MAX',
-                    date_time,
+                    arg.date_time,
                     description='Maximum (latest) archive date',
                     flags='--date-max')
 
 
-def date_min_argument() -> MappedArgument:
+def date_min_argument() -> Argument:
     return argument('DATE_MIN',
-                    date_time,
+                    arg.date_time,
                     description='Minimum (earliest) archive date',
                     flags='--date-min')
 
 
-def interval_max_argument() -> MappedArgument:
+def interval_max_argument() -> Argument:
     return argument('INTERVAL_MAX',
-                    interval,
+                    arg.interval,
                     description='Maximum interval (n[HMS]) between saves to consider',
                     flags='--interval-max')
 
 
-def interval_min_argument() -> MappedArgument:
+def interval_min_argument() -> Argument:
     return argument('INTERVAL_MIN',
-                    interval,
+                    arg.interval,
                     description='Minimum interval (n[HMS]) between saves to consider',
                     flags='--interval-min')
 
 
-def long_format_argument() -> MappedArgument:
+def long_format_argument() -> Argument:
     return argument('LONG_FORMAT',
-                    boolean,
+                    arg.boolean,
                     description='Long format to display extra information',
                     flags=['-l', '--long'])
 
 
-def method_argument() -> MappedArgument:
+def method_argument() -> Argument:
     return argument('METHOD',
-                    text,
+                    arg.text,
                     description=f'Archive method',
                     default_value=DEFAULT_METHOD,
                     choices=get_method_names(),
                     flags=['-m', '--method'])
 
 
-def no_confirmation_argument() -> MappedArgument:
+def no_confirmation_argument() -> Argument:
     return argument('NO_CONFIRMATION',
-                    boolean,
+                    arg.boolean,
                     description='Execute destructive actions without'
                                 ' prompting for confirmation',
                     flags='--no-confirmation')
 
 
-def size_unit_binary_argument() -> MappedArgument:
+def size_unit_binary_argument() -> Argument:
     return argument('SIZE_UNIT_BINARY',
-                    boolean,
+                    arg.boolean,
                     description='Format size as binary 1024-based KiB, MiB, etc.',
                     flags='--size-unit-binary')
 
 
-def size_unit_decimal_argument() -> MappedArgument:
+def size_unit_decimal_argument() -> Argument:
     return argument('SIZE_UNIT_DECIMAL',
-                    boolean,
+                    arg.boolean,
                     description='Format size as decimal 1000-based KB, MB, etc.',
                     flags='--size-unit-decimal')
 
 
-def source_folder_argument(cardinality: Cardinality = None) -> MappedArgument:
+def source_folder_argument(cardinality: Cardinality = None) -> Argument:
     return argument('SOURCE_FOLDER',
-                    folder_path(must_exist=True),
+                    arg.folder_path(must_exist=True),
                     description='Source folder',
                     default_value='.',
                     flags=['-s', '--source-folder'],
                     cardinality=cardinality)
 
 
-def source_name_argument() -> MappedArgument:
+def source_name_argument() -> Argument:
     return argument('SOURCE_NAME',
-                    text,
+                    arg.text,
                     description='Source name',
                     default_value=os.path.basename(os.getcwd()),
                     flags=['-n', '--name'])
 
 
-def tags_argument() -> MappedArgument:
+def tags_argument() -> Argument:
     return argument('TAGS',
-                    text,
+                    arg.text,
                     description='Comma-separated archive tags',
                     flags=['-t', '--tags'])

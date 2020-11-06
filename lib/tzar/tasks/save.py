@@ -1,7 +1,7 @@
 """Tzar save command."""
 
-from jiig import task, argument
-from jiig.arg import boolean, text
+from jiig import arg, task, argument
+
 from tzar.internal.task_runner import TzarTaskRunner
 
 from .arguments import archive_folder_argument, source_name_argument, method_argument, \
@@ -10,28 +10,28 @@ from .arguments import archive_folder_argument, source_name_argument, method_arg
 
 @task('save',
       argument('EXCLUDE',
-               text,
+               arg.text,
                description='Exclusion pattern(s), including gitignore-style wildcards',
                cardinality='*',
                flags=['-e', '--exclude']),
       argument('PROGRESS',
-               boolean,
+               arg.boolean,
                description='Display progress statistics',
                flags=['-p', '--progress']),
       argument('DISABLE_TIMESTAMP',
-               boolean,
+               arg.boolean,
                description=f'Disable adding timestamp to name',
                flags=['-T', '--no-timestamp']),
       argument('GITIGNORE',
-               boolean,
+               arg.boolean,
                description='Use .gitignore exclusions',
                flags='--gitignore'),
       argument('KEEP_LIST',
-               boolean,
+               arg.boolean,
                description='Do not delete temporary file list when done',
                flags='--keep-list'),
       argument('PENDING',
-               boolean,
+               arg.boolean,
                description='Save only modified version-controlled files',
                flags='--pending'),
       archive_folder_argument(),
