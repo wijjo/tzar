@@ -6,5 +6,8 @@
 # Virtual environment root folder.
 VENV_ROOT = 'venv'
 
+# Virtual environment enabled.
+VENV_ENABLED = True
+
 # Package names to install into the virtual environment using its "pip" command.
 PIP_PACKAGES = []

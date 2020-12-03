@@ -1,127 +1,126 @@
 import os
 
-from jiig import arg, argument, Argument, Cardinality
+import jiig
 
 from tzar.internal.archiver import get_method_names, DEFAULT_METHOD
 from tzar.internal.constants import DEFAULT_ARCHIVE_FOLDER
 
 
-def age_max_argument() -> Argument:
-    return argument('AGE_MAX',
-                    arg.integer,
-                    description='Maximum archive age [age_option]',
-                    flags='--age-max')
+def age_max_option() -> jiig.Argument:
+    return jiig.option('AGE_MAX',
+                       '--age-max',
+                       int,
+                       description='Maximum archive age [age_option]')
 
 
-def age_min_argument() -> Argument:
-    return argument('AGE_MIN',
-                    arg.integer,
-                    description='Minimum archive age [age_option]',
-                    flags='--age-min')
+def age_min_option() -> jiig.Argument:
+    return jiig.option('AGE_MIN',
+                       '--age-min',
+                       int,
+                       description='Minimum archive age [age_option]')
 
 
-def archive_folder_argument() -> Argument:
-    return argument('ARCHIVE_FOLDER',
-                    arg.folder_path(must_exist=True),
-                    description='Archive folder',
-                    default_value=DEFAULT_ARCHIVE_FOLDER,
-                    flags=['-f', '--archive-folder'])
+def archive_folder_option() -> jiig.Argument:
+    return jiig.option('ARCHIVE_FOLDER',
+                       ('-f', '--archive-folder'),
+                       jiig.adapters.folder_path,
+                       description='Archive folder',
+                       default_value=DEFAULT_ARCHIVE_FOLDER)
 
 
-def archive_path_argument(positional: bool = False, cardinality: Cardinality = None) -> Argument:
-    return argument('ARCHIVE_PATH',
-                    arg.file_path(must_exist=True, allow_folder=True),
-                    description='Path to source archive file or folder',
-                    flags=['-p', '--archive-path'],
-                    cardinality=cardinality,
-                    positional=positional)
+def archive_path_argument(cardinality: jiig.Cardinality = None) -> jiig.Argument:
+    return jiig.argument('ARCHIVE_PATH',
+                         jiig.adapters.existing_path,
+                         description='Path to source archive file or folder',
+                         cardinality=cardinality)
 
 
-def date_max_argument() -> Argument:
-    return argument('DATE_MAX',
-                    arg.date_time,
-                    description='Maximum (latest) archive date',
-                    flags='--date-max')
+def archive_path_option(cardinality: jiig.Cardinality = None) -> jiig.Argument:
+    return jiig.option('ARCHIVE_PATH',
+                       ('-p', '--archive-path'),
+                       jiig.adapters.existing_path,
+                       description='Path to source archive file or folder',
+                       cardinality=cardinality)
 
 
-def date_min_argument() -> Argument:
-    return argument('DATE_MIN',
-                    arg.date_time,
-                    description='Minimum (earliest) archive date',
-                    flags='--date-min')
+def date_max_option() -> jiig.Argument:
+    return jiig.option('DATE_MAX',
+                       '--date-max',
+                       jiig.adapters.str_to_timestamp,
+                       description='Maximum (latest) archive date')
 
 
-def interval_max_argument() -> Argument:
-    return argument('INTERVAL_MAX',
-                    arg.interval,
-                    description='Maximum interval (n[HMS]) between saves to consider',
-                    flags='--interval-max')
+def date_min_option() -> jiig.Argument:
+    return jiig.option('DATE_MIN',
+                       '--date-min',
+                       jiig.adapters.str_to_timestamp,
+                       description='Minimum (earliest) archive date')
 
 
-def interval_min_argument() -> Argument:
-    return argument('INTERVAL_MIN',
-                    arg.interval,
-                    description='Minimum interval (n[HMS]) between saves to consider',
-                    flags='--interval-min')
+def interval_max_option() -> jiig.Argument:
+    return jiig.option('INTERVAL_MAX',
+                       '--interval-max',
+                       jiig.adapters.str_to_interval,
+                       description='Maximum interval (n[HMS]) between saves to consider')
 
 
-def long_format_argument() -> Argument:
-    return argument('LONG_FORMAT',
-                    arg.boolean,
-                    description='Long format to display extra information',
-                    flags=['-l', '--long'])
+def interval_min_option() -> jiig.Argument:
+    return jiig.option('INTERVAL_MIN',
+                       '--interval-min',
+                       jiig.adapters.str_to_interval,
+                       description='Minimum interval (n[HMS]) between saves to consider')
 
 
-def method_argument() -> Argument:
-    return argument('METHOD',
-                    arg.text,
-                    description=f'Archive method',
-                    default_value=DEFAULT_METHOD,
-                    choices=get_method_names(),
-                    flags=['-m', '--method'])
+def long_format_option() -> jiig.Argument:
+    return jiig.bool_option('LONG_FORMAT',
+                            ('-l', '--long'),
+                            description='Long format to display extra information')
 
 
-def no_confirmation_argument() -> Argument:
-    return argument('NO_CONFIRMATION',
-                    arg.boolean,
-                    description='Execute destructive actions without'
-                                ' prompting for confirmation',
-                    flags='--no-confirmation')
+def method_option() -> jiig.Argument:
+    return jiig.option('METHOD',
+                       ('-m', '--method'),
+                       description=f'Archive method',
+                       default_value=DEFAULT_METHOD,
+                       choices=get_method_names())
 
 
-def size_unit_binary_argument() -> Argument:
-    return argument('SIZE_UNIT_BINARY',
-                    arg.boolean,
-                    description='Format size as binary 1024-based KiB, MiB, etc.',
-                    flags='--size-unit-binary')
+def no_confirmation_option() -> jiig.Argument:
+    return jiig.bool_option('NO_CONFIRMATION',
+                            '--no-confirmation',
+                            description='Execute destructive actions without'
+                                        ' prompting for confirmation')
 
 
-def size_unit_decimal_argument() -> Argument:
-    return argument('SIZE_UNIT_DECIMAL',
-                    arg.boolean,
-                    description='Format size as decimal 1000-based KB, MB, etc.',
-                    flags='--size-unit-decimal')
+def size_unit_binary_option() -> jiig.Argument:
+    return jiig.bool_option('SIZE_UNIT_BINARY',
+                            '--size-unit-binary',
+                            description='Format size as binary 1024-based KiB, MiB, etc.')
 
 
-def source_folder_argument(cardinality: Cardinality = None) -> Argument:
-    return argument('SOURCE_FOLDER',
-                    arg.folder_path(must_exist=True),
-                    description='Source folder',
-                    default_value='.',
-                    flags=['-s', '--source-folder'],
-                    cardinality=cardinality)
+def size_unit_decimal_option() -> jiig.Argument:
+    return jiig.bool_option('SIZE_UNIT_DECIMAL',
+                            '--size-unit-decimal',
+                            description='Format size as decimal 1000-based KB, MB, etc.')
 
 
-def source_name_argument() -> Argument:
-    return argument('SOURCE_NAME',
-                    arg.text,
-                    description='Source name',
-                    default_value=os.path.basename(os.getcwd()),
-                    flags=['-n', '--name'])
+def source_folder_option(cardinality: jiig.Cardinality = None) -> jiig.Argument:
+    return jiig.option('SOURCE_FOLDER',
+                       ('-s', '--source-folder'),
+                       jiig.adapters.folder_path,
+                       description='Source folder',
+                       default_value='.',
+                       cardinality=cardinality)
 
 
-def tags_argument() -> Argument:
-    return argument('TAGS',
-                    arg.text,
-                    description='Comma-separated archive tags',
-                    flags=['-t', '--tags'])
+def source_name_option() -> jiig.Argument:
+    return jiig.option('SOURCE_NAME',
+                       ('-n', '--name'),
+                       description='Source name',
+                       default_value=os.path.basename(os.getcwd()))
+
+
+def tags_option() -> jiig.Argument:
+    return jiig.option('TAGS',
+                       ('-t', '--tags'),
+                       description='Comma-separated archive tags')

@@ -9,7 +9,7 @@ Jiig-based tool to create and manage archives of the working folder.
 import jiig
 
 # Register custom task runner.
-from tzar.internal.task_runner import create_runner     # noqa
+from tzar.internal.tzar_task_runner import TzarTaskRunner    # noqa
 
 # Common options (below) need to know what methods are available.
 from tzar.methods import gz, files, xz, zip             # noqa
@@ -19,13 +19,14 @@ from tzar.methods import gz, files, xz, zip             # noqa
 jiig.tool(
     name='tzar',
     description='Simple archive manager',
-    common_footnotes={
+    footnotes={
         'age_option': '''
 Age strings are one or more summed values separated by '+'. A value is a number
 trailed by a "ymwdHMS" unit letter.
 ''',
         'destructive': 'Destructive operations require confirmation by default.',
-    }
+    },
+    runner_cls=TzarTaskRunner,
 )
 
 # With common options/arguments registered, tasks can be registered also.

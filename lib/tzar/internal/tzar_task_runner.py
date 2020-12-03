@@ -4,7 +4,7 @@ import os
 from time import mktime
 from typing import Text, Optional, Tuple, List, Callable
 
-from jiig import runner_factory, TaskRunner, RunnerData
+from jiig import TaskRunner
 
 from jiig.utility.console import log_error
 from jiig.utility.date_time import parse_date_time, apply_date_time_delta_string, parse_time_interval
@@ -159,8 +159,8 @@ class TzarTaskRunner(TaskRunner):
         return create_archiver(self.source_name,
                                self.source_folder,
                                self.archive_folder,
-                               verbose=self.verbose,
-                               dry_run=self.dry_run)
+                               verbose=self.params.VERBOSE,
+                               dry_run=self.params.DRY_RUN)
 
     def list_catalog(self) -> List[CatalogItem]:
         """
@@ -174,13 +174,3 @@ class TzarTaskRunner(TaskRunner):
             interval_min=self.interval_min,
             interval_max=self.interval_max,
             tags=self.tags)
-
-
-@runner_factory()
-def create_runner(data: RunnerData) -> TaskRunner:
-    """
-    Substitute Tzar-customized TaskRunner subclass.
-
-    :return: TaskRunner instance
-    """
-    return TzarTaskRunner(data)
