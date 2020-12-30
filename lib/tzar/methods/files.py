@@ -4,12 +4,10 @@ import os
 from typing import Text, Sequence, Optional
 
 from jiig.utility.filesystem import create_folder
-from tzar.internal.archiver import archive_method
 
 from .base import MethodSaveData, ArchiveMethodBase, MethodSaveResult, MethodListItem
 
 
-@archive_method('files')
 class ArchiveMethodSync(ArchiveMethodBase):
 
     @classmethod

@@ -3,13 +3,10 @@
 import os
 from typing import Text, Sequence, Optional
 
-from tzar.internal.archiver import archive_method
-
 from .base import MethodSaveData, ArchiveMethodBase, MethodSaveResult, MethodListItem
 from .tarball import handle_tarball_save, handle_tarball_list, handle_tarball_get_name
 
 
-@archive_method('xz')
 class ArchiveMethodXZ(ArchiveMethodBase):
 
     @classmethod

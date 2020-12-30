@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from glob import glob
 from tempfile import NamedTemporaryFile
 from time import strftime, mktime, struct_time, localtime
-from typing import Text, Dict, Type, List, Optional, Callable, Set, Sequence, Iterator, Collection
+from typing import Text, Type, List, Optional, Set, Sequence, Iterator, Collection
 
 from jiig.utility.console import abort, log_error, log_message, log_warning
 from jiig.utility.filesystem import chdir, create_folder, short_path, iterate_filtered_files
@@ -13,7 +13,7 @@ from jiig.utility.general import format_human_byte_count
 from jiig.utility.process import shell_command_string
 
 from tzar.internal.constants import TIMESTAMP_FORMAT, TIMESTAMP_REGEX
-from tzar.methods.base import MethodSaveData, ArchiveMethodBase, MethodListItem
+from tzar.methods import METHOD_MAP, MethodSaveData, ArchiveMethodBase, MethodListItem
 
 
 @dataclass
@@ -21,10 +21,6 @@ class RegisteredMethod:
     """Data for registered archive method."""
     name: Text
     method_cls: Type[ArchiveMethodBase]
-
-
-METHOD_MAP: Dict[Text, RegisteredMethod] = {}
-DEFAULT_METHOD: Optional[Text] = None
 
 
 @dataclass
@@ -94,11 +90,11 @@ class DiscoveredArchive:
 
     @classmethod
     def get_method(cls, archive_path: Text, assumed_type: int = None) -> RegisteredMethod:
-        for registered_method in METHOD_MAP.values():
-            base_path = registered_method.method_cls.check_supported(
+        for name, method_cls in METHOD_MAP.items():
+            base_path = method_cls.check_supported(
                 archive_path, assumed_type=assumed_type)
             if base_path:
-                return registered_method
+                return RegisteredMethod(name, method_cls)
         raise ValueError(f'No suitable archive method for "{archive_path}".')
 
     @classmethod
@@ -237,8 +233,8 @@ class Archiver:
         :param keep_list: do not delete temporary file list file if True
         """
         tag_list: List[Text] = list(_tags_from_string(tags))
-        registered_method = METHOD_MAP.get(method_name)
-        if not registered_method:
+        method_cls = METHOD_MAP.get(method_name)
+        if not method_cls:
             raise RuntimeError(f'Bad archive method name "{method_name}".')
         create_folder(self.archive_folder)
         # Temporarily relocate in order to resolve relative paths.
@@ -300,7 +296,7 @@ class Archiver:
                                              total_bytes=total_bytes,
                                              total_files=total_files,
                                              total_folders=total_folders)
-                save_data = registered_method.method_cls.handle_save(method_data)
+                save_data = method_cls.handle_save(method_data)
                 log_message(f'Saving archive: {short_path(save_data.archive_path)}')
                 full_command = shell_command_string(*save_data.command_arguments)
                 if self.verbose:
@@ -437,20 +433,6 @@ def build_catalog_list(archives: List[DiscoveredArchive],
                     filtered_items.append(item)
             items = filtered_items
     return items
-
-
-def archive_method(name: Text, is_default: bool = False,) -> Callable:
-    """Archive method class decorator.
-    :param name: method name
-    :param is_default: default method if True
-    """
-    def _inner(method_cls: Type[ArchiveMethodBase]):
-        METHOD_MAP[name] = RegisteredMethod(name, method_cls)
-        if is_default:
-            global DEFAULT_METHOD
-            DEFAULT_METHOD = name
-        return method_cls
-    return _inner
 
 
 def get_method_names() -> List[Text]:

@@ -5,12 +5,9 @@ from time import mktime
 import zipfile
 from typing import Text, Sequence, Optional
 
-from tzar.internal.archiver import archive_method
-
 from .base import MethodSaveData, ArchiveMethodBase, MethodSaveResult, MethodListItem
 
 
-@archive_method('zip')
 class ArchiveMethodZip(ArchiveMethodBase):
 
     @classmethod

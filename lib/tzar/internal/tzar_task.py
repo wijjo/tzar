@@ -1,20 +1,18 @@
-"""Tzar-specific task runner."""
+"""Tzar-specific extended Jiig Task class."""
 
 import os
-from time import mktime
-from typing import Text, Optional, Tuple, List, Callable
+from typing import Text, Optional, List, Callable
 
-from jiig import TaskRunner
+import jiig
 
 from jiig.utility.console import log_error
-from jiig.utility.date_time import parse_date_time, apply_date_time_delta_string, parse_time_interval
 from jiig.utility.general import format_human_byte_count
 
 from .archiver import Archiver, create_archiver, CatalogItem
 from .constants import DEFAULT_ARCHIVE_FOLDER
 
 
-class TzarTaskRunner(TaskRunner):
+class TzarTask(jiig.Task):
     """Tzar-specific task runner."""
 
     def format_size(self,
@@ -35,12 +33,12 @@ class TzarTaskRunner(TaskRunner):
         """
         if byte_count is None:
             return default or '-'
-        if self.args.SIZE_UNIT_BINARY:
+        if self.data.SIZE_UNIT_BINARY:
             unit_format = 'b'
-            if self.args.SIZE_UNIT_DECIMAL:
+            if self.data.SIZE_UNIT_DECIMAL:
                 log_error('Ignoring decimal units option when binary units are selected.',
                           issue_once_tag='REDUNDANT_UNIT_OPTIONS')
-        elif self.args.SIZE_UNIT_DECIMAL:
+        elif self.data.SIZE_UNIT_DECIMAL:
             unit_format = 'd'
         else:
             unit_format = None
@@ -53,22 +51,15 @@ class TzarTaskRunner(TaskRunner):
                                 age_name: Text,
                                 choice_function: Callable[[float, float], float],
                                 ) -> Optional[float]:
-        timestamp_result: Optional[float] = None
-        if date_name in self.args:
-            parsed_time_struct = parse_date_time(getattr(self.args, date_name))
-            if parsed_time_struct:
-                timestamp_result = mktime(parsed_time_struct)
-        if age_name in self.args:
-            age_string = getattr(self.args, age_name)
-            if age_string:
-                age_time_struct = apply_date_time_delta_string(age_string, negative=True)
-                if age_time_struct:
-                    age_timestamp = mktime(age_time_struct)
-                    if timestamp_result is None:
-                        timestamp_result = age_timestamp
-                    else:
-                        timestamp_result = choice_function(timestamp_result, age_timestamp)
-        return timestamp_result
+        date_timestamp: Optional[float] = getattr(self.data, date_name, None)
+        age_timestamp: Optional[float] = getattr(self.data, age_name, None)
+        if date_timestamp is None:
+            if age_timestamp is None:
+                return None
+            return age_timestamp
+        if age_timestamp is None:
+            return date_timestamp
+        return choice_function(date_timestamp, age_timestamp)
 
     @property
     def source_name(self) -> Optional[Text]:
@@ -77,7 +68,7 @@ class TzarTaskRunner(TaskRunner):
 
         :return: source name or None
         """
-        return (getattr(self.args, 'SOURCE_NAME', None)
+        return (getattr(self.data, 'SOURCE_NAME', None)
                 or os.path.basename(self.source_folder))
 
     @property
@@ -87,7 +78,7 @@ class TzarTaskRunner(TaskRunner):
 
         :return: source folder or None
         """
-        value = getattr(self.args, 'SOURCE_FOLDER', None)
+        value = getattr(self.data, 'SOURCE_FOLDER', None)
         if value is not None and not isinstance(value, str):
             raise ValueError(f'SOURCE_FOLDER {value} is not a single string value.')
         return value or os.getcwd()
@@ -99,7 +90,7 @@ class TzarTaskRunner(TaskRunner):
 
         :return: archive folder or None
         """
-        return (getattr(self.args, 'ARCHIVE_FOLDER', None)
+        return (getattr(self.data, 'ARCHIVE_FOLDER', None)
                 or DEFAULT_ARCHIVE_FOLDER)
 
     @property
@@ -119,34 +110,6 @@ class TzarTaskRunner(TaskRunner):
         :return: timestamp or None if information is bad or not available
         """
         return self._get_date_age_timestamp('DATE_MAX', 'AGE_MIN', min)
-
-    @property
-    def interval_min(self) -> Optional[float]:
-        """
-        Convert an INTERVAL_MIN arg value to float seconds, if available.
-
-        :return: minimum interval seconds or None
-        """
-        return parse_time_interval(self.args.INTERVAL_MIN)
-
-    @property
-    def interval_max(self) -> Optional[float]:
-        """
-        Convert an INTERVAL_MAX arg value to float seconds, if available.
-
-        :return: maximum interval seconds or None
-        """
-        return parse_time_interval(self.args.INTERVAL_MAX)
-
-    @property
-    def tags(self) -> Optional[Tuple[Text]]:
-        tag_tuple: Optional[Tuple[Text]] = None
-        if 'TAGS' in self.args:
-            tag_string = self.args.TAGS
-            if tag_string is not None:
-                tag_list: List[Text] = [tag.strip() for tag in tag_string.split(',')]
-                tag_tuple = tuple(tag_list)
-        return tag_tuple
 
     def create_archiver(self) -> Archiver:
         """
@@ -171,6 +134,10 @@ class TzarTaskRunner(TaskRunner):
         return self.create_archiver().list_catalog(
             timestamp_min=self.timestamp_min,
             timestamp_max=self.timestamp_max,
-            interval_min=self.interval_min,
-            interval_max=self.interval_max,
-            tags=self.tags)
+            interval_min=getattr(self.data, 'INTERVAL_MIN', None),
+            interval_max=getattr(self.data, 'INTERVAL_MAX', None),
+            tags=self.data.TAGS)
+
+    def on_run(self):
+        """Required call-back hook."""
+        raise NotImplementedError
