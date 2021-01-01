@@ -310,8 +310,10 @@ class Archiver:
                     abort('Archive command failed.', full_command)
 
     def list_catalog(self,
-                     timestamp_min: float = None,
-                     timestamp_max: float = None,
+                     date_min: float = None,
+                     date_max: float = None,
+                     age_min: float = None,
+                     age_max: float = None,
                      interval_min: float = None,
                      interval_max: float = None,
                      tags: Collection[Text] = None,
@@ -319,13 +321,19 @@ class Archiver:
         """
         List catalog archives.
 
-        :param timestamp_min: earliest time stamp to accept
-        :param timestamp_max: latest time stamp to accept
+        :param date_min: timestamp based on minimum date
+        :param date_max: timestamp based on maximum date
+        :param age_min: timestamp based on minimum age
+        :param age_max: timestamp based on maximum age
         :param interval_min: minimum seconds between archive saves (ignored if smaller)
         :param interval_max: maximum seconds between archive saves (ignored if larger)
         :param tags: optional tags for filtering catalog archives (all are required)
         :return: found catalog items
         """
+        timestamp_min = max(filter(lambda ts: ts is not None, (date_min, age_max)),
+                            default=None)
+        timestamp_max = min(filter(lambda ts: ts is not None, (date_max, age_min)),
+                            default=None)
         if not os.path.isdir(self.archive_folder):
             log_error(f'Catalog folder does not exist.', self.archive_folder)
             return []
@@ -351,23 +359,23 @@ class Archiver:
                                   filter_tag_set=filter_tag_set)
 
 
-def create_archiver(source_name: Text,
-                    source_folder: Text,
+def create_archiver(source_folder: Text,
                     archive_folder: Text,
+                    source_name: Text = None,
                     verbose: bool = False,
                     dry_run: bool = False
                     ) -> Archiver:
     """
     Factory function to create Archiver for chosen method.
 
-    :param source_name: base archive name
     :param source_folder: source folder for archive actions
     :param archive_folder: archive container folder
+    :param source_name: base archive name defaults to folder name
     :param verbose: display extra messages if True
     :param dry_run: perform dry run if True
     :return: archiver object
     """
-    return Archiver(source_name,
+    return Archiver(source_name or os.path.basename(source_folder),
                     source_folder,
                     archive_folder,
                     verbose=verbose,

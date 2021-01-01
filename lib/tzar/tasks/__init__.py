@@ -1,1 +1,1 @@
-from . import arguments, catalog, compare, delete, list, prune, save
+from . import catalog, compare, delete, list, prune, save

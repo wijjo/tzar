@@ -1,17 +1,26 @@
 """Tzar compare command."""
 
-from tzar.internal.tzar_task import TzarTask
+from typing import Text
 
-from . import arguments
+from jiig import Task, Opt, Arg, adapters
 
 
-class TaskClass(TzarTask):
+class TaskClass(Task):
     """Compare archive to existing files."""
-    opts = [
-        arguments.source_folder_option(),
-    ]
+
+    # For type inspection only.
+    class Data:
+        SOURCE_FOLDER: Text
+        ARCHIVE_PATH: Text
+    data: Data
+
     args = [
-        arguments.archive_path_argument(),
+        Opt(('-s', '--source-folder'), 'SOURCE_FOLDER', 'Source folder',
+            adapters.path.check_folder,
+            adapters.path.absolute,
+            default_value='.'),
+        Arg('ARCHIVE_PATH', 'Path to source archive file or folder',
+            adapters.path.check_exists),
     ]
 
     def on_run(self):
