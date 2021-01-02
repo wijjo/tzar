@@ -12,13 +12,13 @@ confirmation prompt, e.g. for automation scripts.
 import os
 from typing import Optional, Text, List
 
-from jiig import BoolOpt, Opt, adapters, Task
+import jiig
 
 from tzar.internal.constants import DEFAULT_ARCHIVE_FOLDER
 from tzar.internal.archiver import create_archiver
 
 
-class TaskClass(Task):
+class TaskClass(jiig.Task):
     """Prune archives to save space [destructive]."""
 
     # For type inspection only.
@@ -36,35 +36,42 @@ class TaskClass(Task):
         TAGS: Optional[List[Text]]
     data: Data
 
-    args = [
-        Opt('--age-max', 'AGE_MAX', 'Maximum archive age [age_option]',
-            adapters.time.age),
-        Opt('--age-min', 'AGE_MIN', 'Minimum archive age [age_option]',
-            adapters.time.age),
-        Opt(('-f', '--archive-folder'), 'ARCHIVE_FOLDER', 'Archive folder',
-            adapters.path.check_folder,
-            default_value=DEFAULT_ARCHIVE_FOLDER),
-        Opt('--date-max', 'DATE_MAX', 'Maximum (latest) archive date',
-            adapters.time.timestamp),
-        Opt('--date-min', 'DATE_MIN', 'Minimum (earliest) archive date',
-            adapters.time.timestamp),
-        Opt('--interval-max', 'INTERVAL_MAX',
-            'Maximum interval (n[HMS]) between saves to consider',
-            adapters.time.interval),
-        Opt('--interval-min', 'INTERVAL_MIN',
-            'Minimum interval (n[HMS]) between saves to consider',
-            adapters.time.interval),
-        BoolOpt('--no-confirmation', 'NO_CONFIRMATION',
-                'Execute destructive actions without prompting for confirmation'),
-        Opt(('-n', '--name'), 'SOURCE_NAME', 'Source name',
-            default_value=os.path.basename(os.getcwd())),
-        Opt(('-s', '--source-folder'), 'SOURCE_FOLDER', 'Source folder',
-            adapters.path.check_folder,
-            adapters.path.absolute,
-            default_value='.'),
-        Opt(('-t', '--tags'), 'TAGS', 'Comma-separated archive tags',
-            adapters.text.comma_tuple),
-    ]
+    args = {
+        'AGE_MAX': ('--age-max',
+                    'Maximum archive age [age_option]',
+                    jiig.time.age),
+        'AGE_MIN': ('--age-min',
+                    'Minimum archive age [age_option]',
+                    jiig.time.age),
+        'ARCHIVE_FOLDER': ('-f', '--archive-folder', 'Archive folder',
+                           jiig.path.check_folder,
+                           jiig.Default(DEFAULT_ARCHIVE_FOLDER)),
+        'DATE_MAX': ('--date-max',
+                     'Maximum (latest) archive date',
+                     jiig.time.timestamp),
+        'DATE_MIN': ('--date-min',
+                     'Minimum (earliest) archive date',
+                     jiig.time.timestamp),
+        'INTERVAL_MAX': ('--interval-max',
+                         'Maximum interval (n[HMS]) between saves to consider',
+                         jiig.time.interval),
+        'INTERVAL_MIN': ('--interval-min',
+                         'Minimum interval (n[HMS]) between saves to consider',
+                         jiig.time.interval),
+        'NO_CONFIRMATION!': ('--no-confirmation',
+                             'Execute destructive actions without prompting for confirmation'),
+        'SOURCE_NAME': ('-n', '--name',
+                        'Source name',
+                        jiig.Default(os.path.basename(os.getcwd()))),
+        'SOURCE_FOLDER': ('-s', '--source-folder',
+                          'Source folder',
+                          jiig.path.check_folder,
+                          jiig.path.absolute,
+                          jiig.Default('.')),
+        'TAGS': ('-t', '--tags',
+                 'Comma-separated archive tags',
+                 jiig.text.comma_tuple),
+    }
 
     def on_run(self):
         archiver = create_archiver(self.data.SOURCE_FOLDER,

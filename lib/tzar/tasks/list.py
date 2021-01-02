@@ -3,7 +3,7 @@
 from time import localtime, strftime
 from typing import Text, Tuple, List
 
-from jiig import Task, BoolOpt, Arg, adapters
+import jiig
 from jiig.utility.general import format_table
 
 from tzar.internal.utility import format_file_size
@@ -11,7 +11,7 @@ from tzar.internal.archiver import MethodListItem
 from tzar.internal.archiver import list_archive
 
 
-class TaskClass(Task):
+class TaskClass(jiig.Task):
     """List archive contents."""
 
     # For type inspection only.
@@ -21,15 +21,14 @@ class TaskClass(Task):
         ARCHIVE_PATH: List[Text]
     data: Data
 
-    args = [
-        BoolOpt('--size-unit-binary', 'SIZE_UNIT_BINARY',
-                'Format size as binary 1024-based KiB, MiB, etc.'),
-        BoolOpt('--size-unit-decimal', 'SIZE_UNIT_DECIMAL',
-                'Format size as decimal 1000-based KB, MB, etc.'),
-        Arg('ARCHIVE_PATH', 'Path to source archive file or folder',
-            adapters.path.check_exists,
-            cardinality='+'),
-    ]
+    args = {
+        'SIZE_UNIT_BINARY!': ('--size-unit-binary',
+                              'Format size as binary 1024-based KiB, MiB, etc.'),
+        'SIZE_UNIT_DECIMAL!': ('--size-unit-decimal',
+                               'Format size as decimal 1000-based KB, MB, etc.'),
+        'ARCHIVE_PATH[+]': ('Path to source archive file or folder',
+                            jiig.path.check_exists),
+    }
 
     def on_run(self):
         def _item_tuple(item: MethodListItem) -> Tuple[Text, Text, Text]:

@@ -3,7 +3,7 @@
 import os
 from typing import Tuple, Text, Iterator, List, Optional
 
-from jiig import BoolOpt, Opt, adapters, Task
+import jiig
 from jiig.utility.general import format_table
 from jiig.utility.filesystem import short_path
 
@@ -12,7 +12,7 @@ from tzar.internal.constants import DEFAULT_ARCHIVE_FOLDER
 from tzar.internal.utility import format_file_size
 
 
-class TaskClass(Task):
+class TaskClass(jiig.Task):
     """Manage and view archive catalog folders."""
 
     # For type inspection only.
@@ -32,40 +32,48 @@ class TaskClass(Task):
         TAGS: Optional[List[Text]]
     data: Data
 
-    args = [
-        BoolOpt(('-l', '--long'), 'LONG_FORMAT',
-                'Long format to display extra information'),
-        Opt('--age-max', 'AGE_MAX', 'Maximum archive age [age_option]',
-            adapters.time.age),
-        Opt('--age-min', 'AGE_MIN', 'Minimum archive age [age_option]',
-            adapters.time.age),
-        Opt(('-f', '--archive-folder'), 'ARCHIVE_FOLDER', 'Archive folder',
-            adapters.path.check_folder,
-            adapters.path.absolute,
-            default_value=DEFAULT_ARCHIVE_FOLDER),
-        Opt('--date-max', 'DATE_MAX', 'Maximum (latest) archive date',
-            adapters.time.timestamp),
-        Opt('--date-min', 'DATE_MIN', 'Minimum (earliest) archive date',
-            adapters.time.timestamp),
-        Opt('--interval-max', 'INTERVAL_MAX',
-            'Maximum interval (n[HMS]) between saves to consider',
-            adapters.time.interval),
-        Opt('--interval-min', 'INTERVAL_MIN',
-            'Minimum interval (n[HMS]) between saves to consider',
-            adapters.time.interval),
-        BoolOpt('--size-unit-binary', 'SIZE_UNIT_BINARY',
-                'Format size as binary 1024-based KiB, MiB, etc.'),
-        BoolOpt('--size-unit-decimal', 'SIZE_UNIT_DECIMAL',
-                'Format size as decimal 1000-based KB, MB, etc.'),
-        Opt(('-n', '--name'), 'SOURCE_NAME', 'Source name',
-            default_value=os.path.basename(os.getcwd())),
-        Opt(('-s', '--source-folder'), 'SOURCE_FOLDER', 'Source folder',
-            adapters.path.check_folder,
-            adapters.path.absolute,
-            default_value='.'),
-        Opt(('-t', '--tags'), 'TAGS', 'Comma-separated archive tags',
-            adapters.text.comma_tuple),
-    ]
+    args = {
+        'LONG_FORMAT!': ('-l', '--long',
+                         'Long format to display extra information'),
+        'AGE_MAX': ('--age-max',
+                    'Maximum archive age [age_option]',
+                    jiig.time.age),
+        'AGE_MIN': ('--age-min',
+                    'Minimum archive age [age_option]',
+                    jiig.time.age),
+        'ARCHIVE_FOLDER': ('-f', '--archive-folder',
+                           'Archive folder',
+                           jiig.path.check_folder,
+                           jiig.path.absolute,
+                           jiig.Default(DEFAULT_ARCHIVE_FOLDER)),
+        'DATE_MAX': ('--date-max',
+                     'Maximum (latest) archive date',
+                     jiig.time.timestamp),
+        'DATE_MIN': ('--date-min',
+                     'Minimum (earliest) archive date',
+                     jiig.time.timestamp),
+        'INTERVAL_MAX': ('--interval-max',
+                         'Maximum interval (n[HMS]) between saves to consider',
+                         jiig.time.interval),
+        'INTERVAL_MIN': ('--interval-min',
+                         'Minimum interval (n[HMS]) between saves to consider',
+                         jiig.time.interval),
+        'SIZE_UNIT_BINARY!': ('--size-unit-binary',
+                              'Format size as binary 1024-based KiB, MiB, etc.'),
+        'SIZE_UNIT_DECIMAL!': ('--size-unit-decimal',
+                               'Format size as decimal 1000-based KB, MB, etc.'),
+        'SOURCE_NAME': ('-n', '--name',
+                        'Source name',
+                        jiig.Default(os.path.basename(os.getcwd()))),
+        'SOURCE_FOLDER': ('-s', '--source-folder',
+                          'Source folder',
+                          jiig.path.check_folder,
+                          jiig.path.absolute,
+                          jiig.Default('.')),
+        'TAGS': ('-t', '--tags',
+                 'Comma-separated archive tags',
+                 jiig.text.comma_tuple),
+    }
 
     def _get_headers(self) -> Iterator[Text]:
         yield 'date/time'

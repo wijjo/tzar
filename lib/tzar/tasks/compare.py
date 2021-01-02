@@ -2,10 +2,10 @@
 
 from typing import Text
 
-from jiig import Task, Opt, Arg, adapters
+import jiig
 
 
-class TaskClass(Task):
+class TaskClass(jiig.Task):
     """Compare archive to existing files."""
 
     # For type inspection only.
@@ -14,14 +14,15 @@ class TaskClass(Task):
         ARCHIVE_PATH: Text
     data: Data
 
-    args = [
-        Opt(('-s', '--source-folder'), 'SOURCE_FOLDER', 'Source folder',
-            adapters.path.check_folder,
-            adapters.path.absolute,
-            default_value='.'),
-        Arg('ARCHIVE_PATH', 'Path to source archive file or folder',
-            adapters.path.check_exists),
-    ]
+    args = {
+        'SOURCE_FOLDER': ('-s', '--source-folder',
+                          'Source folder',
+                          jiig.path.check_folder,
+                          jiig.path.absolute,
+                          jiig.Default('.')),
+        'ARCHIVE_PATH': ('Path to source archive file or folder',
+                         jiig.path.check_exists),
+    }
 
     def on_run(self):
         pass
