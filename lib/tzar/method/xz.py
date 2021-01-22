@@ -1,4 +1,6 @@
-"""Support for GZ archives."""
+"""
+Support for XZ archives.
+"""
 
 import os
 from typing import Text, Sequence, Optional
@@ -7,7 +9,7 @@ from .base import MethodSaveData, ArchiveMethodBase, MethodSaveResult, MethodLis
 from .tarball import handle_tarball_save, handle_tarball_list, handle_tarball_get_name
 
 
-class ArchiveMethodGZ(ArchiveMethodBase):
+class ArchiveMethodXZ(ArchiveMethodBase):
 
     @classmethod
     def handle_get_name(cls, archive_name: Text) -> Text:
@@ -17,7 +19,7 @@ class ArchiveMethodGZ(ArchiveMethodBase):
         :param archive_name: archive file name
         :return: stripped name suitable for further parsing
         """
-        return handle_tarball_get_name(archive_name, extension='gz')
+        return handle_tarball_get_name(archive_name, extension='xz')
 
     @classmethod
     def handle_save(cls, save_data: MethodSaveData) -> MethodSaveResult:
@@ -27,7 +29,7 @@ class ArchiveMethodGZ(ArchiveMethodBase):
         :param save_data: input parameters for save operation
         :return: save result data
         """
-        return handle_tarball_save(save_data, compressors=['pigz', 'gzip'], extension='gz')
+        return handle_tarball_save(save_data, compressors=['pixz', 'xz'], extension='xz')
 
     @classmethod
     def handle_list(cls, archive_path: Text) -> Sequence[MethodListItem]:
@@ -37,7 +39,7 @@ class ArchiveMethodGZ(ArchiveMethodBase):
         :param archive_path: path of archive file or folder
         :return: sequence of item data objects, one per archived file
         """
-        return handle_tarball_list(archive_path, compression='gz')
+        return handle_tarball_list(archive_path, compression='xz')
 
     @classmethod
     def check_supported(cls,
@@ -56,6 +58,6 @@ class ArchiveMethodGZ(ArchiveMethodBase):
                 return None
         elif assumed_type != 1:
             return None
-        if not archive_path.endswith('.tar.gz'):
+        if not archive_path.endswith('.tar.xz'):
             return None
         return archive_path[:-7]

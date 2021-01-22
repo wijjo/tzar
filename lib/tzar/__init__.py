@@ -1,2 +1,5 @@
-# noinspection PyUnresolvedReferences
-from . import tasks, methods, internal
+"""
+Tzar library.
+"""
+
+__all__ = ['method', 'task']

@@ -3,16 +3,16 @@
 import os
 from typing import Tuple, Text, Iterator, List, Optional
 
-import jiig
-from jiig.utility.general import format_table
-from jiig.utility.filesystem import short_path
+from jiig import arg, model
+from jiig.util.general import format_table
+from jiig.util.filesystem import short_path
 
 from tzar.internal.archiver import CatalogItem, create_archiver, Archiver
 from tzar.internal.constants import DEFAULT_ARCHIVE_FOLDER
 from tzar.internal.utility import format_file_size
 
 
-class TaskClass(jiig.Task):
+class TaskClass(model.Task):
     """Manage and view archive catalog folders."""
 
     # For type inspection only.
@@ -37,42 +37,42 @@ class TaskClass(jiig.Task):
                          'Long format to display extra information'),
         'AGE_MAX': ('--age-max',
                     'Maximum archive age [age_option]',
-                    jiig.time.age),
+                    arg.str_to_age),
         'AGE_MIN': ('--age-min',
                     'Minimum archive age [age_option]',
-                    jiig.time.age),
+                    arg.str_to_age),
         'ARCHIVE_FOLDER': ('-f', '--archive-folder',
                            'Archive folder',
-                           jiig.path.check_folder,
-                           jiig.path.absolute,
-                           jiig.Default(DEFAULT_ARCHIVE_FOLDER)),
+                           arg.path_is_folder,
+                           arg.path_to_absolute,
+                           arg.default(DEFAULT_ARCHIVE_FOLDER)),
         'DATE_MAX': ('--date-max',
                      'Maximum (latest) archive date',
-                     jiig.time.timestamp),
+                     arg.str_to_timestamp),
         'DATE_MIN': ('--date-min',
                      'Minimum (earliest) archive date',
-                     jiig.time.timestamp),
+                     arg.str_to_timestamp),
         'INTERVAL_MAX': ('--interval-max',
                          'Maximum interval (n[HMS]) between saves to consider',
-                         jiig.time.interval),
+                         arg.str_to_interval),
         'INTERVAL_MIN': ('--interval-min',
                          'Minimum interval (n[HMS]) between saves to consider',
-                         jiig.time.interval),
+                         arg.str_to_interval),
         'SIZE_UNIT_BINARY!': ('--size-unit-binary',
                               'Format size as binary 1024-based KiB, MiB, etc.'),
         'SIZE_UNIT_DECIMAL!': ('--size-unit-decimal',
                                'Format size as decimal 1000-based KB, MB, etc.'),
         'SOURCE_NAME': ('-n', '--name',
                         'Source name',
-                        jiig.Default(os.path.basename(os.getcwd()))),
+                        arg.default(os.path.basename(os.getcwd()))),
         'SOURCE_FOLDER': ('-s', '--source-folder',
                           'Source folder',
-                          jiig.path.check_folder,
-                          jiig.path.absolute,
-                          jiig.Default('.')),
+                          arg.path_is_folder,
+                          arg.path_to_absolute,
+                          arg.default('.')),
         'TAGS': ('-t', '--tags',
                  'Comma-separated archive tags',
-                 jiig.text.comma_tuple),
+                 arg.str_to_comma_tuple),
     }
 
     def _get_headers(self) -> Iterator[Text]:
@@ -108,8 +108,8 @@ class TaskClass(jiig.Task):
         archiver = create_archiver(self.data.SOURCE_FOLDER,
                                    self.data.ARCHIVE_FOLDER,
                                    source_name=self.data.SOURCE_NAME,
-                                   verbose=self.params.VERBOSE,
-                                   dry_run=self.params.DRY_RUN)
+                                   verbose=self.runtime.verbose,
+                                   dry_run=self.runtime.dry_run)
         print(f'''
 ::: {archiver.source_name} archive catalog from "{archiver.archive_folder}" :::
 ''')

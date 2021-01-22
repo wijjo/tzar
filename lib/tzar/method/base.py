@@ -1,10 +1,12 @@
-"""Archive support base class."""
+"""
+Archive support base class.
+"""
 
 from dataclasses import dataclass
 from typing import List, Text, Sequence, Optional
 
-from jiig.utility.console import log_warning
-from jiig.utility.filesystem import find_system_program
+from jiig.util.console import log_warning
+from jiig.util.filesystem import find_system_program
 
 PV_INSTALLED = bool(find_system_program('pv'))
 PV_WARNED = False

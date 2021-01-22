@@ -2,10 +2,10 @@
 
 from typing import Text, List
 
-import jiig
+from jiig import arg, model
 
 
-class TaskClass(jiig.Task):
+class TaskClass(model.Task):
     """Delete archive(s) [destructive]."""
 
     # For type inspection only.
@@ -15,7 +15,7 @@ class TaskClass(jiig.Task):
 
     args = {
         'ARCHIVE_PATH[+]': ('Path(s) to source archive file or folder',
-                            jiig.path.check_exists),
+                            arg.path_exists),
     }
 
     def on_run(self):

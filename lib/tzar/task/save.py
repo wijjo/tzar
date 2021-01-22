@@ -3,14 +3,14 @@
 import os
 from typing import Text, Optional, List
 
-import jiig
+from jiig import arg, model
 
 from tzar.internal.archiver import create_archiver, get_method_names
 from tzar.internal.constants import DEFAULT_ARCHIVE_FOLDER
-from tzar.methods import DEFAULT_METHOD
+from tzar.method import DEFAULT_METHOD
 
 
-class TaskClass(jiig.Task):
+class TaskClass(model.Task):
     """Save an archive of the working folder or another folder."""
 
     # Not needed, but serves as a type inspection aid.
@@ -42,31 +42,31 @@ class TaskClass(jiig.Task):
         'PENDING!': ('--pending',
                      'Save only modified version-controlled files'),
         'ARCHIVE_FOLDER': ('-f', '--archive-folder', 'Archive folder',
-                           jiig.path.check_folder,
-                           jiig.Default(DEFAULT_ARCHIVE_FOLDER)),
+                           arg.path_is_folder,
+                           arg.default(DEFAULT_ARCHIVE_FOLDER)),
         'SOURCE_NAME': ('-n', '--name',
                         'Source name',
-                        jiig.Default(os.path.basename(os.getcwd()))),
+                        arg.default(os.path.basename(os.getcwd()))),
         'METHOD': ('-m', '--method',
                    'Archive method',
-                   jiig.Default(DEFAULT_METHOD),
-                   jiig.Choices(*get_method_names())),
+                   arg.default(DEFAULT_METHOD),
+                   arg.choices(*get_method_names())),
         'TAGS': ('-t', '--tags',
                  'Comma-separated archive tags',
-                 jiig.text.comma_tuple),
+                 arg.str_to_comma_tuple),
         'SOURCE_FOLDER': ('-s', '--source-folder',
                           'Source folder',
-                          jiig.path.check_folder,
-                          jiig.path.absolute,
-                          jiig.Default('.')),
+                          arg.path_is_folder,
+                          arg.path_to_absolute,
+                          arg.default('.')),
     }
 
     def on_run(self):
         archiver = create_archiver(self.data.SOURCE_FOLDER,
                                    self.data.ARCHIVE_FOLDER,
                                    source_name=self.data.SOURCE_NAME,
-                                   verbose=self.params.VERBOSE,
-                                   dry_run=self.params.DRY_RUN)
+                                   verbose=self.runtime.verbose,
+                                   dry_run=self.runtime.dry_run)
         archiver.save_archive(self.data.METHOD,
                               gitignore=self.data.GITIGNORE,
                               excludes=self.data.EXCLUDE,

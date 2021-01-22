@@ -2,8 +2,8 @@
 
 from typing import Text, Optional
 
-from jiig.utility.console import log_error
-from jiig.utility.general import format_human_byte_count
+from jiig.util.console import log_error
+from jiig.util.general import format_human_byte_count
 
 
 def format_file_size(byte_count: Optional[int],

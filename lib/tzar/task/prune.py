@@ -12,13 +12,13 @@ confirmation prompt, e.g. for automation scripts.
 import os
 from typing import Optional, Text, List
 
-import jiig
+from jiig import model, arg
 
 from tzar.internal.constants import DEFAULT_ARCHIVE_FOLDER
 from tzar.internal.archiver import create_archiver
 
 
-class TaskClass(jiig.Task):
+class TaskClass(model.Task):
     """Prune archives to save space [destructive]."""
 
     # For type inspection only.
@@ -39,46 +39,46 @@ class TaskClass(jiig.Task):
     args = {
         'AGE_MAX': ('--age-max',
                     'Maximum archive age [age_option]',
-                    jiig.time.age),
+                    arg.str_to_age),
         'AGE_MIN': ('--age-min',
                     'Minimum archive age [age_option]',
-                    jiig.time.age),
+                    arg.str_to_age),
         'ARCHIVE_FOLDER': ('-f', '--archive-folder', 'Archive folder',
-                           jiig.path.check_folder,
-                           jiig.Default(DEFAULT_ARCHIVE_FOLDER)),
+                           arg.path_is_folder,
+                           arg.default(DEFAULT_ARCHIVE_FOLDER)),
         'DATE_MAX': ('--date-max',
                      'Maximum (latest) archive date',
-                     jiig.time.timestamp),
+                     arg.str_to_timestamp),
         'DATE_MIN': ('--date-min',
                      'Minimum (earliest) archive date',
-                     jiig.time.timestamp),
+                     arg.str_to_timestamp),
         'INTERVAL_MAX': ('--interval-max',
                          'Maximum interval (n[HMS]) between saves to consider',
-                         jiig.time.interval),
+                         arg.str_to_interval),
         'INTERVAL_MIN': ('--interval-min',
                          'Minimum interval (n[HMS]) between saves to consider',
-                         jiig.time.interval),
+                         arg.str_to_interval),
         'NO_CONFIRMATION!': ('--no-confirmation',
                              'Execute destructive actions without prompting for confirmation'),
         'SOURCE_NAME': ('-n', '--name',
                         'Source name',
-                        jiig.Default(os.path.basename(os.getcwd()))),
+                        arg.default(os.path.basename(os.getcwd()))),
         'SOURCE_FOLDER': ('-s', '--source-folder',
                           'Source folder',
-                          jiig.path.check_folder,
-                          jiig.path.absolute,
-                          jiig.Default('.')),
+                          arg.path_is_folder,
+                          arg.path_to_absolute,
+                          arg.default('.')),
         'TAGS': ('-t', '--tags',
                  'Comma-separated archive tags',
-                 jiig.text.comma_tuple),
+                 arg.str_to_comma_tuple),
     }
 
     def on_run(self):
         archiver = create_archiver(self.data.SOURCE_FOLDER,
                                    self.data.ARCHIVE_FOLDER,
                                    source_name=self.data.SOURCE_NAME,
-                                   verbose=self.params.VERBOSE,
-                                   dry_run=self.params.DRY_RUN)
+                                   verbose=self.runtime.verbose,
+                                   dry_run=self.runtime.dry_run)
         for item in archiver.list_catalog(
                 date_min=self.data.DATE_MIN,
                 date_max=self.data.DATE_MAX,

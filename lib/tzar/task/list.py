@@ -3,15 +3,15 @@
 from time import localtime, strftime
 from typing import Text, Tuple, List
 
-import jiig
-from jiig.utility.general import format_table
+from jiig import model, arg
+from jiig.util.general import format_table
 
 from tzar.internal.utility import format_file_size
 from tzar.internal.archiver import MethodListItem
 from tzar.internal.archiver import list_archive
 
 
-class TaskClass(jiig.Task):
+class TaskClass(model.Task):
     """List archive contents."""
 
     # For type inspection only.
@@ -27,7 +27,7 @@ class TaskClass(jiig.Task):
         'SIZE_UNIT_DECIMAL!': ('--size-unit-decimal',
                                'Format size as decimal 1000-based KB, MB, etc.'),
         'ARCHIVE_PATH[+]': ('Path to source archive file or folder',
-                            jiig.path.check_exists),
+                            arg.path_exists),
     }
 
     def on_run(self):

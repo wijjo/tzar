@@ -1,41 +1,64 @@
 #!/usr/bin/env jiig-run
-
 """
 Tzar archive manager.
 
 Jiig-based tool to create and manage archives of the working folder.
 """
 
-import jiig
-import tzar
+tool_name = 'tzar'
+
+project_name = 'Tzar'
+
+description = 'Tzar archive manager.'
+
+version = '0.5'
+
+author = 'Steve Cooper'
+
+# noinspection PyShadowingBuiltins
+copyright = '2021, Steve Cooper'
+
+pip_packages = ['pdoc3']
 
 
-class ToolClass(jiig.Tool):
-    """Simple archive manager."""
+def boot():
+    """
+    Tzar bootstrap function.
 
-    tasks = {
-        'catalog': tzar.tasks.catalog,
-        'compare': tzar.tasks.compare,
-        'delete': tzar.tasks.delete,
-        'list': tzar.tasks.list,
-        'prune': tzar.tasks.prune,
-        'save': tzar.tasks.save,
-    }
+    :return: tool class type
+    """
+    from jiig import model
+    from jiig.task import alias, help, unittest, venv
+    from tzar.task import catalog, compare, delete, list, prune, save
 
-    secondary_tasks = {
-        'alias': jiig.tasks.alias,
-        'help': jiig.tasks.help,
-    }
+    class ToolClass(model.Tool):
+        """Simple archive manager."""
 
-    hidden_tasks = {
-        'unittest': jiig.tasks.unittest,
-        'venv': jiig.tasks.venv,
-    }
+        tasks = {
+            'catalog': catalog,
+            'compare': compare,
+            'delete': delete,
+            'list': list,
+            'prune': prune,
+            'save': save,
+        }
 
-    footnotes = {
-        'age_option': '''
-Age strings are one or more summed values separated by '+'. A value is a number
-trailed by a "ymwdHMS" unit letter.
-''',
-        'destructive': 'Destructive operations require confirmation by default.',
-    }
+        secondary_tasks = {
+            'alias': alias,
+            'help': help,
+        }
+
+        hidden_tasks = {
+            'unittest': unittest,
+            'venv': venv,
+        }
+
+        footnotes = {
+            'age_option': '''
+    Age strings are one or more summed values separated by '+'. A value is a number
+    trailed by a "ymwdHMS" unit letter.
+    ''',
+            'destructive': 'Destructive operations require confirmation by default.',
+        }
+
+    return ToolClass

@@ -1,10 +1,12 @@
-"""Tarball archive utilities."""
+"""
+Tarball archive general support.
+"""
 
 import tarfile
 from typing import List, Text, Union, Sequence
 
-from jiig.utility.filesystem import choose_program_alternative
-from jiig.utility.general import make_list
+from jiig.util.filesystem import choose_program_alternative
+from jiig.util.general import make_list
 
 from .base import MethodSaveData, MethodSaveResult, MethodListItem
 
