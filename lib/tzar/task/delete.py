@@ -2,21 +2,23 @@
 
 from typing import Text, List
 
-from jiig import arg, model
+import jiig
 
 
-class TaskClass(model.Task):
-    """Delete archive(s) [destructive]."""
-
-    # For type inspection only.
-    class Data:
-        ARCHIVE_PATH: List[Text]
-    data: Data
-
-    args = {
+TASK = jiig.Task(
+    description='Delete archive(s) [destructive].',
+    args={
         'ARCHIVE_PATH[+]': ('Path(s) to source archive file or folder',
-                            arg.path_exists),
-    }
+                            jiig.arg.path_exists),
+    },
+)
 
-    def on_run(self):
-        pass
+
+# For type inspection only.
+class Data:
+    ARCHIVE_PATH: List[Text]
+
+
+@TASK.run
+def task_run(_runner: jiig.Runner, _data: Data):
+    raise NotImplementedError

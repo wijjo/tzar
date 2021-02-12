@@ -5,60 +5,18 @@ Tzar archive manager.
 Jiig-based tool to create and manage archives of the working folder.
 """
 
-tool_name = 'tzar'
+TOOL_NAME = 'tzar'
 
-project_name = 'Tzar'
+PROJECT_NAME = 'Tzar'
 
-description = 'Tzar archive manager.'
+DESCRIPTION = 'Simple archive manager.'
 
-version = '0.5'
+VERSION = '0.5'
 
-author = 'Steve Cooper'
+AUTHOR = 'Steve Cooper'
 
-# noinspection PyShadowingBuiltins
-copyright = '2021, Steve Cooper'
+COPYRIGHT = '2021, Steve Cooper'
 
-pip_packages = ['pdoc3']
+PIP_PACKAGES = ['pdoc3']
 
-
-def boot():
-    """
-    Tzar bootstrap function.
-
-    :return: tool class type
-    """
-    from jiig import model
-    from jiig.task import alias, help, unittest, venv
-    from tzar.task import catalog, compare, delete, list, prune, save
-
-    class ToolClass(model.Tool):
-        """Simple archive manager."""
-
-        tasks = {
-            'catalog': catalog,
-            'compare': compare,
-            'delete': delete,
-            'list': list,
-            'prune': prune,
-            'save': save,
-        }
-
-        secondary_tasks = {
-            'alias': alias,
-            'help': help,
-        }
-
-        hidden_tasks = {
-            'unittest': unittest,
-            'venv': venv,
-        }
-
-        footnotes = {
-            'age_option': '''
-    Age strings are one or more summed values separated by '+'. A value is a number
-    trailed by a "ymwdHMS" unit letter.
-    ''',
-            'destructive': 'Destructive operations require confirmation by default.',
-        }
-
-    return ToolClass
+ROOT_TASK = 'tzar.task.root'

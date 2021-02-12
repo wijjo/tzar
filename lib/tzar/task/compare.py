@@ -2,27 +2,29 @@
 
 from typing import Text
 
-from jiig import arg, model
+import jiig
 
 
-class TaskClass(model.Task):
-    """Compare archive to existing files."""
-
-    # For type inspection only.
-    class Data:
-        SOURCE_FOLDER: Text
-        ARCHIVE_PATH: Text
-    data: Data
-
-    args = {
+TASK = jiig.Task(
+    description='Compare archive to existing files.',
+    args={
         'SOURCE_FOLDER': ('-s', '--source-folder',
                           'Source folder',
-                          arg.path_is_folder,
-                          arg.path_to_absolute,
-                          arg.default('.')),
+                          jiig.arg.path_is_folder,
+                          jiig.arg.path_to_absolute,
+                          jiig.arg.default('.')),
         'ARCHIVE_PATH': ('Path to source archive file or folder',
-                         arg.path_exists),
-    }
+                         jiig.arg.path_exists),
+    },
+)
 
-    def on_run(self):
-        pass
+
+# For type inspection only.
+class Data:
+    SOURCE_FOLDER: Text
+    ARCHIVE_PATH: Text
+
+
+@TASK.run
+def task_run(_runner: jiig.Runner, _data: Data):
+    raise NotImplementedError
