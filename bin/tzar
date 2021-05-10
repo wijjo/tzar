@@ -19,4 +19,4 @@ COPYRIGHT = '2021, Steve Cooper'
 
 PIP_PACKAGES = ['pdoc3']
 
-ROOT_TASK = 'tzar.task.root'
+ROOT_TASK = 'tzar.tasks.root'
