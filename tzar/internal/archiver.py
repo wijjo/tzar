@@ -10,7 +10,8 @@ from time import strftime, mktime, struct_time, localtime
 from typing import Text, Type, List, Optional, Set, Sequence, Iterator, Collection
 
 from jiig.util.console import abort, log_error, log_message, log_warning
-from jiig.util.filesystem import chdir, create_folder, short_path, iterate_filtered_files
+from jiig.util.filesystem import create_folder, short_path, iterate_filtered_files, \
+    temporary_working_folder
 from jiig.util.general import format_human_byte_count
 from jiig.util.process import shell_command_string
 
@@ -241,7 +242,7 @@ class Archiver:
             raise RuntimeError(f'Bad archive method name "{method_name}".')
         create_folder(self.archive_folder)
         # Temporarily relocate in order to resolve relative paths.
-        with chdir(self.source_folder):
+        with temporary_working_folder(self.source_folder):
             name_parts = [self.source_name]
             if timestamp:
                 name_parts.append(strftime(TIMESTAMP_FORMAT))

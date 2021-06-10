@@ -76,8 +76,8 @@ class Task(jiig.Task):
         archiver = create_archiver(self.source_folder,
                                    self.archive_folder,
                                    source_name=self.source_name,
-                                   verbose=runtime.verbose,
-                                   dry_run=runtime.dry_run)
+                                   verbose=runtime.options.verbose,
+                                   dry_run=runtime.options.dry_run)
         print(f'''
 ::: {archiver.source_name} archive catalog from "{archiver.archive_folder}" :::
 ''')
