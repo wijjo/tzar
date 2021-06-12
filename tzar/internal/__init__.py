@@ -1,3 +1,0 @@
-"""
-Tzar internal library.
-"""

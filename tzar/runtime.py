@@ -9,6 +9,7 @@ from tempfile import NamedTemporaryFile
 from time import strftime, mktime, struct_time, localtime
 from typing import Text, Type, List, Optional, Set, Sequence, Iterator, Collection
 
+import jiig
 from jiig.util.console import abort, log_error, log_message, log_warning
 from jiig.util.filesystem import create_folder, short_path, iterate_filtered_files, \
     temporary_working_folder
@@ -190,33 +191,80 @@ def _tags_from_string(tags: Text = None) -> Iterator[Text]:
                 log_error(f'Bad non-alphanumeric archive tag "{tag}".')
 
 
-class Archiver:
-    """Archiver class is responsible for archive catalogs and operations."""
+class TzarRuntime(jiig.Runtime):
 
-    def __init__(self,
-                 source_name: Text,
-                 source_folder: Text,
-                 archive_folder: Text,
-                 verbose: bool = False,
-                 dry_run: bool = False
-                 ):
+    def list_archive(self,
+                     archive_path: Text,
+                     ) -> Sequence[MethodListItem]:
         """
-        Archiver constructor.
+        List tarball contents.
 
-        :param source_name: source name
-        :param source_folder: source folder path
-        :param archive_folder: archive folder path
-        :param verbose: display verbose messages if True
-        :param dry_run: perform dry run without executing actions if True
+        :param archive_path: archive tarball file path
+        :return: sequence of archive items
         """
-        self.source_folder = source_folder
-        self.source_name = source_name
-        self.archive_folder = archive_folder
-        self.verbose = verbose
-        self.dry_run = dry_run
+        try:
+            discovered_archive = DiscoveredArchive.new(archive_path)
+            return discovered_archive.method_cls().handle_list(archive_path)
+        except ValueError as exc:
+            self.abort(exc)
+
+    @staticmethod
+    def build_catalog_list(archives: List[DiscoveredArchive],
+                           source_name: Text,
+                           timestamp_min: float = None,
+                           timestamp_max: float = None,
+                           interval_min: float = None,
+                           interval_max: float = None,
+                           filter_tag_set: Optional[Set[Text]] = None,
+                           ) -> List[CatalogItem]:
+        """
+        General function for building archive catalog lists.
+
+        Separated this method out to allow testing with synthetic data.
+
+        :param archives: discovered archives (file information)
+        :param source_name: source name for identifying related archives
+        :param timestamp_min: earliest time stamp to accept
+        :param timestamp_max: latest time stamp to accept
+        :param interval_min: minimum seconds between archive saves (ignored if smaller)
+        :param interval_max: maximum seconds between archive saves (ignored if larger)
+        :param filter_tag_set: optional required tags
+        :return:
+        """
+        items: List[CatalogItem] = []
+        for archive in archives:
+            if ((archive.source_name == source_name)
+                    and (timestamp_min is None or archive.time_stamp >= timestamp_min)
+                    and (timestamp_max is None or archive.time_stamp <= timestamp_max)
+                    and (filter_tag_set is None or filter_tag_set.issubset(archive.tags))):
+                items.append(CatalogItem(path=archive.path,
+                                         method_name=archive.method_name,
+                                         tags=archive.tags,
+                                         size=archive.file_size,
+                                         time=archive.time_stamp))
+        # Sort by time descending and filter by any interval limits provided.
+        if items:
+            items.sort(key=lambda x: x.time, reverse=True)
+            if interval_min is not None or interval_max is not None:
+                filtered_items: List[CatalogItem] = [items[0]]
+                for item_idx, item in enumerate(items[1:], start=1):
+                    delta_time = items[item_idx - 1].time - item.time
+                    if ((interval_min is None or delta_time >= interval_min)
+                            and (interval_max is None or delta_time <= interval_max)):
+                        filtered_items.append(item)
+                items = filtered_items
+        return items
+
+    @staticmethod
+    def get_method_names() -> List[Text]:
+        """Provide method name list, e.g. for method option help text."""
+        return list(sorted(METHOD_MAP.keys()))
 
     def save_archive(self,
+                     source_folder: Text,
+                     archive_folder: Text,
                      method_name: Text,
+                     source_name: Text = None,
                      tags: Text = None,
                      pending: bool = False,
                      gitignore: bool = False,
@@ -227,7 +275,10 @@ class Archiver:
         """
         Save an archive of a source folder.
 
+        :param source_folder: source folder path
+        :param archive_folder: archive folder path
         :param method_name: archive method name
+        :param source_name: optional source name (default: folder name)
         :param tags: optional tags to assign to archive (added to file name)
         :param pending: locally-modified source repository files only if True
         :param gitignore: obey .gitignore exclusions if True
@@ -236,24 +287,26 @@ class Archiver:
         :param progress: show progress if True
         :param keep_list: do not delete temporary file list file if True
         """
+        if source_name is None:
+            source_name = os.path.basename(source_folder)
         tag_list: List[Text] = list(_tags_from_string(tags))
         method_cls = METHOD_MAP.get(method_name)
         if not method_cls:
             raise RuntimeError(f'Bad archive method name "{method_name}".')
-        create_folder(self.archive_folder)
+        create_folder(archive_folder)
         # Temporarily relocate in order to resolve relative paths.
-        with temporary_working_folder(self.source_folder):
-            name_parts = [self.source_name]
+        with temporary_working_folder(source_folder):
+            name_parts = [source_name]
             if timestamp:
                 name_parts.append(strftime(TIMESTAMP_FORMAT))
             if tag_list:
                 name_parts.extend(tag_list)
-            full_folder_path = os.path.join(self.archive_folder, '_'.join(name_parts))
-            source_file_iterator = iterate_filtered_files(self.source_folder,
+            full_folder_path = os.path.join(archive_folder, '_'.join(name_parts))
+            source_file_iterator = iterate_filtered_files(source_folder,
                                                           pending=pending,
                                                           gitignore=gitignore,
                                                           excludes=excludes)
-            if self.dry_run:
+            if self.options.dry_run:
                 for path_idx, path in enumerate(source_file_iterator):
                     if path_idx == 0:
                         log_message(f'Saving archive (dry run)'
@@ -270,7 +323,7 @@ class Archiver:
             total_folders = 0
             total_bytes = 0
             visited_folders: Set[Text] = set()
-            with NamedTemporaryFile(prefix=f'tzar_{os.path.basename(self.source_folder)}_',
+            with NamedTemporaryFile(prefix=f'tzar_{os.path.basename(source_folder)}_',
                                     suffix='.txt',
                                     mode='w',
                                     encoding='utf-8',
@@ -291,11 +344,11 @@ class Archiver:
                     else:
                         log_warning('Source path is not a file.', file_path)
                 temp_file.flush()
-                method_data = MethodSaveData(source_path=self.source_folder,
+                method_data = MethodSaveData(source_path=source_folder,
                                              source_list_path=temp_file.name,
                                              archive_path=full_folder_path,
-                                             verbose=self.verbose and not progress,
-                                             dry_run=self.dry_run,
+                                             verbose=self.options.verbose and not progress,
+                                             dry_run=self.options.dry_run,
                                              progress=progress,
                                              total_bytes=total_bytes,
                                              total_files=total_files,
@@ -303,7 +356,7 @@ class Archiver:
                 save_data = method_cls.handle_save(method_data)
                 log_message(f'Saving archive: {short_path(save_data.archive_path)}')
                 full_command = shell_command_string(*save_data.command_arguments)
-                if self.verbose:
+                if self.options.verbose:
                     log_message('Archive command:', full_command)
                 formatted_bytes = format_human_byte_count(total_bytes, unit_format='b')
                 log_message(f'Archiving {formatted_bytes}'
@@ -314,6 +367,9 @@ class Archiver:
                     abort('Archive command failed.', full_command)
 
     def list_catalog(self,
+                     source_folder: Text,
+                     archive_folder: Text,
+                     source_name: Text = None,
                      date_min: float = None,
                      date_max: float = None,
                      age_min: float = None,
@@ -325,6 +381,9 @@ class Archiver:
         """
         List catalog archives.
 
+        :param source_folder: source folder path
+        :param archive_folder: archive folder path
+        :param source_name: optional source name (default: folder name)
         :param date_min: timestamp based on minimum date
         :param date_max: timestamp based on maximum date
         :param age_min: timestamp based on minimum age
@@ -334,18 +393,20 @@ class Archiver:
         :param tags: optional tags for filtering catalog archives (all are required)
         :return: found catalog items
         """
+        if source_name is None:
+            source_name = os.path.basename(source_folder)
         timestamp_min = max(filter(lambda ts: ts is not None, (date_min, age_max)),
                             default=None)
         timestamp_max = min(filter(lambda ts: ts is not None, (date_max, age_min)),
                             default=None)
-        if not os.path.isdir(self.archive_folder):
-            log_error(f'Catalog folder does not exist.', self.archive_folder)
+        if not os.path.isdir(archive_folder):
+            log_error(f'Catalog folder does not exist.', archive_folder)
             return []
-        if not os.path.isdir(self.source_folder):
-            log_error(f'Source folder does not exist.', self.source_folder)
+        if not os.path.isdir(source_folder):
+            log_error(f'Source folder does not exist.', source_folder)
             return []
         discovered_archives: List[DiscoveredArchive] = []
-        for path in glob(os.path.join(self.archive_folder, '*')):
+        for path in glob(os.path.join(archive_folder, '*')):
             try:
                 discovered_archives.append(DiscoveredArchive.new(path))
             except ValueError as exc:
@@ -354,99 +415,10 @@ class Archiver:
             filter_tag_set = set(tags)
         else:
             filter_tag_set = None
-        return build_catalog_list(discovered_archives,
-                                  self.source_name,
-                                  timestamp_min=timestamp_min,
-                                  timestamp_max=timestamp_max,
-                                  interval_min=interval_min,
-                                  interval_max=interval_max,
-                                  filter_tag_set=filter_tag_set)
-
-
-def create_archiver(source_folder: Text,
-                    archive_folder: Text,
-                    source_name: Text = None,
-                    verbose: bool = False,
-                    dry_run: bool = False
-                    ) -> Archiver:
-    """
-    Factory function to create Archiver for chosen method.
-
-    :param source_folder: source folder for archive actions
-    :param archive_folder: archive container folder
-    :param source_name: base archive name defaults to folder name
-    :param verbose: display extra messages if True
-    :param dry_run: perform dry run if True
-    :return: archiver object
-    """
-    return Archiver(source_name or os.path.basename(source_folder),
-                    source_folder,
-                    archive_folder,
-                    verbose=verbose,
-                    dry_run=dry_run)
-
-
-def list_archive(archive_path: Text) -> Sequence[MethodListItem]:
-    """
-    List tarball contents.
-
-    :param archive_path: archive tarball file path
-    :return: sequence of archive items
-    """
-    try:
-        discovered_archive = DiscoveredArchive.new(archive_path)
-        return discovered_archive.method_cls().handle_list(archive_path)
-    except ValueError as exc:
-        abort(exc)
-
-
-def build_catalog_list(archives: List[DiscoveredArchive],
-                       source_name: Text,
-                       timestamp_min: float = None,
-                       timestamp_max: float = None,
-                       interval_min: float = None,
-                       interval_max: float = None,
-                       filter_tag_set: Optional[Set[Text]] = None,
-                       ) -> List[CatalogItem]:
-    """
-    General function for building archive catalog lists.
-
-    Separated this method out to allow testing with synthetic data.
-
-    :param archives: discovered archives (file information)
-    :param source_name: source name for identifying related archives
-    :param timestamp_min: earliest time stamp to accept
-    :param timestamp_max: latest time stamp to accept
-    :param interval_min: minimum seconds between archive saves (ignored if smaller)
-    :param interval_max: maximum seconds between archive saves (ignored if larger)
-    :param filter_tag_set: optional required tags
-    :return:
-    """
-    items: List[CatalogItem] = []
-    for archive in archives:
-        if ((archive.source_name == source_name)
-                and (timestamp_min is None or archive.time_stamp >= timestamp_min)
-                and (timestamp_max is None or archive.time_stamp <= timestamp_max)
-                and (filter_tag_set is None or filter_tag_set.issubset(archive.tags))):
-            items.append(CatalogItem(path=archive.path,
-                                     method_name=archive.method_name,
-                                     tags=archive.tags,
-                                     size=archive.file_size,
-                                     time=archive.time_stamp))
-    # Sort by time descending and filter by any interval limits provided.
-    if items:
-        items.sort(key=lambda x: x.time, reverse=True)
-        if interval_min is not None or interval_max is not None:
-            filtered_items: List[CatalogItem] = [items[0]]
-            for item_idx, item in enumerate(items[1:], start=1):
-                delta_time = items[item_idx - 1].time - item.time
-                if ((interval_min is None or delta_time >= interval_min)
-                        and (interval_max is None or delta_time <= interval_max)):
-                    filtered_items.append(item)
-            items = filtered_items
-    return items
-
-
-def get_method_names() -> List[Text]:
-    """Provide method name list, e.g. for method option help text."""
-    return list(sorted(METHOD_MAP.keys()))
+        return self.build_catalog_list(discovered_archives,
+                                       source_name,
+                                       timestamp_min=timestamp_min,
+                                       timestamp_max=timestamp_max,
+                                       interval_min=interval_min,
+                                       interval_max=interval_max,
+                                       filter_tag_set=filter_tag_set)

@@ -2,6 +2,8 @@
 
 import jiig
 
+from tzar.runtime import TzarRuntime
+
 
 class Task(jiig.Task):
     """Delete archive(s) [destructive]."""
@@ -11,5 +13,5 @@ class Task(jiig.Task):
         exists=True,
         repeat=(1, None))
 
-    def on_run(self, _runtime: jiig.Runtime):
+    def on_run(self, _runtime: TzarRuntime):
         raise NotImplementedError

@@ -13,8 +13,8 @@ import os
 
 import jiig
 
-from tzar.internal.constants import DEFAULT_ARCHIVE_FOLDER
-from tzar.internal.archiver import create_archiver
+from tzar.constants import DEFAULT_ARCHIVE_FOLDER
+from tzar.runtime import TzarRuntime
 
 
 class Task(jiig.Task):
@@ -68,13 +68,11 @@ class Task(jiig.Task):
         cli_flags=('-s', '--source-folder')
     ) = '.'
 
-    def on_run(self, runtime: jiig.Runtime):
-        archiver = create_archiver(self.source_folder,
-                                   self.archive_folder,
-                                   source_name=self.source_name,
-                                   verbose=runtime.options.verbose,
-                                   dry_run=runtime.options.dry_run)
-        for item in archiver.list_catalog(
+    def on_run(self, runtime: TzarRuntime):
+        for item in runtime.list_catalog(
+                self.source_folder,
+                self.archive_folder,
+                source_name=self.source_name,
                 date_min=self.date_min,
                 date_max=self.date_max,
                 age_min=self.age_min,
@@ -82,4 +80,4 @@ class Task(jiig.Task):
                 interval_min=self.interval_min,
                 interval_max=self.interval_max,
                 tags=self.tags):
-            print('-->', item.time_string)
+            print(f'--> {item.time_string}')

@@ -6,9 +6,8 @@ from typing import Text, Tuple
 import jiig
 from jiig.util.general import format_table
 
-from tzar.internal.utility import format_file_size
-from tzar.internal.archiver import MethodListItem
-from tzar.internal.archiver import list_archive
+from tzar.runtime import TzarRuntime, MethodListItem
+from tzar.utility import format_file_size
 
 
 class Task(jiig.Task):
@@ -27,7 +26,7 @@ class Task(jiig.Task):
         exists=True,
         repeat=(1, None))
 
-    def on_run(self, _runtime: jiig.Runtime):
+    def on_run(self, runtime: TzarRuntime):
         def _item_tuple(item: MethodListItem) -> Tuple[Text, Text, Text]:
             file_size = format_file_size(item.size,
                                          size_unit_binary=self.size_unit_binary,
@@ -36,7 +35,7 @@ class Task(jiig.Task):
             return file_size, file_time, item.path
 
         for archive_path in self.archive_path:
-            archive_items = list_archive(archive_path)
+            archive_items = runtime.list_archive(archive_path)
             for line in format_table(*[_item_tuple(item) for item in archive_items],
                                      headers=['size', 'date/time', 'path']):
                 print(line)

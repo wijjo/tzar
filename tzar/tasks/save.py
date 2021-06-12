@@ -4,9 +4,9 @@ import os
 
 import jiig
 
-from tzar.internal.archiver import create_archiver, get_method_names
-from tzar.internal.constants import DEFAULT_ARCHIVE_FOLDER
+from tzar.constants import DEFAULT_ARCHIVE_FOLDER
 from tzar.method import DEFAULT_METHOD
+from tzar.runtime import TzarRuntime
 
 
 class Task(jiig.Task):
@@ -54,7 +54,7 @@ class Task(jiig.Task):
     method: jiig.text(
         'Archive method.',
         cli_flags=('-m', '--method'),
-        choices=get_method_names(),
+        choices=TzarRuntime.get_method_names(),
     ) = DEFAULT_METHOD
 
     source_folder: jiig.filesystem_folder(
@@ -63,17 +63,15 @@ class Task(jiig.Task):
         cli_flags=('-s', '--source-folder')
     ) = '.'
 
-    def on_run(self, runtime: jiig.Runtime):
-        archiver = create_archiver(self.source_folder,
-                                   self.archive_folder,
-                                   source_name=self.source_name,
-                                   verbose=runtime.options.verbose,
-                                   dry_run=runtime.options.dry_run)
-        archiver.save_archive(self.method,
-                              gitignore=self.gitignore,
-                              excludes=self.exclude,
-                              pending=self.pending,
-                              timestamp=not self.disable_timestamp,
-                              progress=self.progress,
-                              keep_list=self.keep_list,
-                              tags=self.tags)
+    def on_run(self, runtime: TzarRuntime):
+        runtime.save_archive(self.source_folder,
+                             self.archive_folder,
+                             self.method,
+                             source_name=self.source_name,
+                             gitignore=self.gitignore,
+                             excludes=self.exclude,
+                             pending=self.pending,
+                             timestamp=not self.disable_timestamp,
+                             progress=self.progress,
+                             keep_list=self.keep_list,
+                             tags=self.tags)

@@ -2,6 +2,8 @@
 
 import jiig
 
+from tzar.runtime import TzarRuntime
+
 
 class Task(jiig.Task):
     """Compare archive to existing files."""
@@ -16,5 +18,5 @@ class Task(jiig.Task):
         cli_flags=('-s', '--source-folder')
     ) = '.'
 
-    def on_run(self, _runtime: jiig.Runtime):
+    def on_run(self, _runtime: TzarRuntime):
         raise NotImplementedError

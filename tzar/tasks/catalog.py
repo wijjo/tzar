@@ -7,9 +7,9 @@ import jiig
 from jiig.util.general import format_table
 from jiig.util.filesystem import short_path
 
-from tzar.internal.archiver import CatalogItem, create_archiver, Archiver
-from tzar.internal.constants import DEFAULT_ARCHIVE_FOLDER
-from tzar.internal.utility import format_file_size
+from tzar.runtime import TzarRuntime, CatalogItem
+from tzar.constants import DEFAULT_ARCHIVE_FOLDER
+from tzar.utility import format_file_size
 
 
 class Task(jiig.Task):
@@ -72,18 +72,15 @@ class Task(jiig.Task):
         cli_flags=('-s', '--source-folder')
     ) = '.'
 
-    def on_run(self, runtime: jiig.Runtime):
-        archiver = create_archiver(self.source_folder,
-                                   self.archive_folder,
-                                   source_name=self.source_name,
-                                   verbose=runtime.options.verbose,
-                                   dry_run=runtime.options.dry_run)
-        print(f'''
-::: {archiver.source_name} archive catalog from "{archiver.archive_folder}" :::
-''')
-        for line in format_table(*self._get_rows(archiver),
-                                 headers=list(self._get_headers())):
-            print(line)
+    def on_run(self, runtime: TzarRuntime):
+        with jiig.RuntimeContext(runtime,
+                                 source_name=self.source_name,
+                                 archive_folder=self.archive_folder,
+                                 ) as context:
+            context.heading(1, '{source_name} archive catalog from "{archive_folder}"')
+            for line in format_table(*self._get_rows(runtime),
+                                     headers=list(self._get_headers())):
+                print(line)
 
     def _get_headers(self) -> Iterator[Text]:
         yield 'date/time'
@@ -103,8 +100,11 @@ class Task(jiig.Task):
                                    size_unit_decimal=self.size_unit_decimal)
             yield short_path(item.file_name, is_folder=os.path.isdir(item.path))
 
-    def _get_rows(self, archiver: Archiver) -> Iterator[Tuple[Text]]:
-        for item in archiver.list_catalog(
+    def _get_rows(self, runtime: TzarRuntime) -> Iterator[Tuple[Text]]:
+        for item in runtime.list_catalog(
+                self.source_folder,
+                self.archive_folder,
+                source_name=self.source_name,
                 date_min=self.date_min,
                 date_max=self.date_max,
                 age_min=self.age_min,
