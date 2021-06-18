@@ -21,4 +21,4 @@ PIP_PACKAGES = ['pdoc3']
 
 RUNTIME = 'tzar.runtime'
 
-ROOT_TASK = 'tzar.tasks.root'
+ROOT_TASK = 'tzar.tasks'
