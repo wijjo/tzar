@@ -3,7 +3,7 @@ Archive support base class.
 """
 
 from dataclasses import dataclass
-from typing import List, Text, Sequence, Optional
+from typing import List, Text, Sequence, Optional, Type
 
 from jiig.util.console import log_warning
 from jiig.util.filesystem import find_system_program
@@ -109,3 +109,10 @@ class ArchiveMethodBase:
         :return: base filename or path if it is handled or None if it is not
         """
         raise NotImplementedError
+
+
+@dataclass
+class RegisteredMethod:
+    """Data for registered archive method."""
+    name: Text
+    method_cls: Type[ArchiveMethodBase]

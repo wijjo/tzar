@@ -3,7 +3,8 @@ from time import strptime, mktime
 import unittest
 from typing import List, Text, Optional
 
-from runtime import build_catalog_list, DiscoveredArchive
+from tzar.discovered_archive import DiscoveredArchive
+from tzar.runtime import TzarRuntime
 
 
 class TestCatalog(unittest.TestCase):
@@ -33,13 +34,13 @@ class TestCatalog(unittest.TestCase):
             timestamp_max = mktime(strptime(time_max, '%Y%m%d-%H%M%S'))
         else:
             timestamp_max = None
-        items = build_catalog_list(archives,
-                                   'test',
-                                   timestamp_min=timestamp_min,
-                                   timestamp_max=timestamp_max,
-                                   interval_min=interval_min,
-                                   interval_max=interval_max,
-                                   filter_tag_set=filter_tag_set)
+        items = TzarRuntime.build_catalog_list(archives,
+                                               'test',
+                                               timestamp_min=timestamp_min,
+                                               timestamp_max=timestamp_max,
+                                               interval_min=interval_min,
+                                               interval_max=interval_max,
+                                               filter_tag_set=filter_tag_set)
         actual = [os.path.basename(item.path) for item in items]
         if actual != expected:
             raise AssertionError(f'Mismatch: actual={actual} expected={expected}')

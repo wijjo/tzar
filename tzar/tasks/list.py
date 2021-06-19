@@ -6,25 +6,18 @@ from typing import Text, Tuple
 import jiig
 from jiig.util.general import format_table
 
-from tzar.runtime import TzarRuntime, MethodListItem
+from tzar import arguments
+from tzar.archive_method import MethodListItem
+from tzar.runtime import TzarRuntime
 from tzar.utility import format_file_size
 
 
 class Task(jiig.Task):
     """List archive contents."""
 
-    size_unit_binary: jiig.boolean(
-        'Format size as binary 1024-based KiB, MiB, etc..',
-        cli_flags='--size-unit-binary')
-
-    size_unit_decimal: jiig.boolean(
-        'Format size as decimal 1000-based KB, MB, etc..',
-        cli_flags='--size-unit-decimal')
-
-    archive_path: jiig.filesystem_object(
-        'Path to source archive file or folder.',
-        exists=True,
-        repeat=(1, None))
+    size_unit_binary: arguments.size_unit_binary_option
+    size_unit_decimal: arguments.size_unit_decimal_option
+    archive_path: arguments.archive_paths_argument
 
     def on_run(self, runtime: TzarRuntime):
         def _item_tuple(item: MethodListItem) -> Tuple[Text, Text, Text]:

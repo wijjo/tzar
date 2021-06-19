@@ -1,16 +1,16 @@
 """
-Archive support for file-based cloning using rsync.
+Support for GZ archives.
 """
 
 import os
 from typing import Text, Sequence, Optional
 
-from jiig.util.filesystem import create_folder
+from tzar.archive_method import MethodSaveData, ArchiveMethodBase, MethodSaveResult, MethodListItem
 
-from .base import MethodSaveData, ArchiveMethodBase, MethodSaveResult, MethodListItem
+from .tarball import handle_tarball_save, handle_tarball_list, handle_tarball_get_name
 
 
-class ArchiveMethodSync(ArchiveMethodBase):
+class ArchiveMethodGZ(ArchiveMethodBase):
 
     @classmethod
     def handle_get_name(cls, archive_name: Text) -> Text:
@@ -20,7 +20,7 @@ class ArchiveMethodSync(ArchiveMethodBase):
         :param archive_name: archive file name
         :return: stripped name suitable for further parsing
         """
-        return archive_name
+        return handle_tarball_get_name(archive_name, extension='gz')
 
     @classmethod
     def handle_save(cls, save_data: MethodSaveData) -> MethodSaveResult:
@@ -30,12 +30,7 @@ class ArchiveMethodSync(ArchiveMethodBase):
         :param save_data: input parameters for save operation
         :return: save result data
         """
-        create_folder(os.path.dirname(save_data.archive_path))
-        cmd_args = ['rsync', '-a', f'--include-from={save_data.source_list_path}']
-        if save_data.verbose:
-            cmd_args.append('-v')
-        cmd_args.extend([f'{save_data.source_path}/', f'{save_data.archive_path}/'])
-        return MethodSaveResult(archive_path=save_data.archive_path, command_arguments=cmd_args)
+        return handle_tarball_save(save_data, compressors=['pigz', 'gzip'], extension='gz')
 
     @classmethod
     def handle_list(cls, archive_path: Text) -> Sequence[MethodListItem]:
@@ -45,7 +40,7 @@ class ArchiveMethodSync(ArchiveMethodBase):
         :param archive_path: path of archive file or folder
         :return: sequence of item data objects, one per archived file
         """
-        raise NotImplementedError
+        return handle_tarball_list(archive_path, compression='gz')
 
     @classmethod
     def check_supported(cls,
@@ -59,6 +54,11 @@ class ArchiveMethodSync(ArchiveMethodBase):
         :param assumed_type: For testing, 1=file, 2=folder, None=check physical object
         :return: base filename or path if it is handled or None if it is not
         """
-        if assumed_type == 2 or (assumed_type is None and os.path.isdir(archive_path)):
-            return archive_path
-        return None
+        if assumed_type is None:
+            if not os.path.isfile(archive_path):
+                return None
+        elif assumed_type != 1:
+            return None
+        if not archive_path.endswith('.tar.gz'):
+            return None
+        return archive_path[:-7]

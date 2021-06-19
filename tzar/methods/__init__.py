@@ -2,7 +2,8 @@
 
 from typing import Text, Dict, Type
 
-from .base import MethodSaveData, ArchiveMethodBase, MethodListItem
+from tzar.archive_method import ArchiveMethodBase
+
 from .files import ArchiveMethodSync
 from .gz import ArchiveMethodGZ
 from .xz import ArchiveMethodXZ

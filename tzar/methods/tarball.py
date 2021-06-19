@@ -8,7 +8,7 @@ from typing import List, Text, Union, Sequence
 from jiig.util.filesystem import choose_program_alternative
 from jiig.util.general import make_list
 
-from .base import MethodSaveData, MethodSaveResult, MethodListItem
+from tzar.archive_method import MethodSaveData, MethodSaveResult, MethodListItem
 
 
 def handle_tarball_save(save_data: MethodSaveData,
