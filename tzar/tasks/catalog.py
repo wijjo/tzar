@@ -30,10 +30,9 @@ class Task(jiig.Task):
     source_folder: arguments.source_folder_option
 
     def on_run(self, runtime: TzarRuntime):
-        with jiig.RuntimeContext(runtime,
-                                 source_name=self.source_name,
-                                 archive_folder=self.archive_folder,
-                                 ) as context:
+        with runtime.context(source_name=self.source_name,
+                             archive_folder=self.archive_folder,
+                             ) as context:
             context.heading(1, '{source_name} archive catalog from "{archive_folder}"')
             for line in format_table(*self._get_rows(runtime),
                                      headers=list(self._get_headers())):
