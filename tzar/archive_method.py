@@ -5,7 +5,7 @@ Archive support base class.
 from dataclasses import dataclass
 from typing import List, Text, Sequence, Optional, Type
 
-from jiig.util.console import log_warning
+from jiig.util.log import log_warning
 from jiig.util.filesystem import find_system_program
 
 PV_INSTALLED = bool(find_system_program('pv'))

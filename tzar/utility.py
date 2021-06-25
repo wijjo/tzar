@@ -2,7 +2,7 @@
 
 from typing import Text, Optional
 
-from jiig.util.console import log_error
+from jiig.util.log import log_error
 from jiig.util.general import format_human_byte_count
 
 

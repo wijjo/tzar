@@ -10,7 +10,7 @@ from time import strftime, struct_time, localtime
 from typing import Text, List, Optional, Set, Sequence, Iterator, Collection
 
 import jiig
-from jiig.util.console import abort, log_error, log_message, log_warning
+from jiig.util.log import abort, log_error, log_message, log_warning
 from jiig.util.filesystem import create_folder, short_path, iterate_filtered_files, \
     temporary_working_folder
 from jiig.util.general import format_human_byte_count
