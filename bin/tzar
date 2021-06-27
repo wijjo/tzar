@@ -1,4 +1,4 @@
-#!/usr/bin/env jiig-run
+#!/usr/bin/env jiig
 """
 Tzar archive manager.
 
