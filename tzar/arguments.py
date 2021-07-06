@@ -67,12 +67,12 @@ long_format_option = jiig.f.boolean(
 )
 
 age_max_option = jiig.f.age(
-    'Maximum archive age [age_option].',
+    'Maximum archive age [^age_option].',
     cli_flags='--age-max',
 )
 
 age_min_option = jiig.f.age(
-    'Minimum archive age [age_option].',
+    'Minimum archive age [^age_option].',
     cli_flags='--age-min',
 )
 

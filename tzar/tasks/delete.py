@@ -6,10 +6,11 @@ from tzar import arguments
 from tzar.runtime import TzarRuntime
 
 
-class Task(jiig.Task):
-    """Delete archive(s) [destructive]."""
-
-    archive_path: arguments.archive_paths_argument
-
-    def on_run(self, _runtime: TzarRuntime):
-        raise NotImplementedError
+# noinspection PyUnusedLocal
+@jiig.task
+def delete(
+    runtime: TzarRuntime,
+    archive_path: arguments.archive_paths_argument,
+):
+    """Delete archive(s). [^destructive]"""
+    raise NotImplementedError

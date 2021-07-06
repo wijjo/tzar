@@ -6,11 +6,12 @@ from tzar import arguments
 from tzar.runtime import TzarRuntime
 
 
-class Task(jiig.Task):
+# noinspection PyUnusedLocal
+@jiig.task
+def compare(
+    _runtime: TzarRuntime,
+    archive_path: arguments.archive_path_argument,
+    source_folder: arguments.source_folder_option,
+):
     """Compare archive to existing files."""
-
-    archive_path: arguments.archive_path_argument
-    source_folder: arguments.source_folder_option
-
-    def on_run(self, _runtime: TzarRuntime):
-        raise NotImplementedError
+    raise NotImplementedError
