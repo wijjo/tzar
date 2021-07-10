@@ -7,29 +7,64 @@ import jiig
 from jiig.util.general import format_table
 from jiig.util.filesystem import short_path
 
-from tzar import arguments
+from tzar import constants
 from tzar.runtime import TzarRuntime, CatalogItem
 from tzar.utility import format_file_size
 
 
-@jiig.task
+@jiig.task(
+    cli={
+        'options': {
+            'long_format': constants.OPTION_LONG_FORMAT,
+            'age_min': constants.OPTION_AGE_MIN,
+            'age_max': constants.OPTION_AGE_MAX,
+            'date_min': constants.OPTION_DATE_MIN,
+            'date_max': constants.OPTION_DATE_MAX,
+            'interval_max': constants.OPTION_INTERVAL_MAX,
+            'interval_min': constants.OPTION_INTERVAL_MIN,
+            'size_unit_binary': constants.OPTION_SIZE_UNIT_BINARY,
+            'size_unit_decimal': constants.OPTION_SIZE_UNIT_DECIMAL,
+            'tags': constants.OPTION_TAGS,
+            'archive_folder': constants.OPTION_ARCHIVE_FOLDER,
+            'source_name': constants.OPTION_SOURCE_NAME,
+            'source_folder': constants.OPTION_SOURCE_FOLDER,
+        }
+    }
+)
 def catalog(
     runtime: TzarRuntime,
-    long_format: arguments.long_format_option,
-    age_max: arguments.age_max_option,
-    age_min: arguments.age_min_option,
-    date_max: arguments.date_max_option,
-    date_min: arguments.date_min_option,
-    interval_max: arguments.interval_max_option,
-    interval_min: arguments.interval_min_option,
-    size_unit_binary: arguments.size_unit_binary_option,
-    size_unit_decimal: arguments.size_unit_decimal_option,
-    tags: arguments.tags_option,
-    archive_folder: arguments.archive_folder_option,
-    source_name: arguments.source_name_option,
-    source_folder: arguments.source_folder_option,
+    long_format: jiig.f.boolean(),
+    age_max: jiig.f.age(),
+    age_min: jiig.f.age(),
+    date_max: jiig.f.timestamp(),
+    date_min: jiig.f.timestamp(),
+    interval_max: jiig.f.interval(),
+    interval_min: jiig.f.interval(),
+    size_unit_binary: jiig.f.boolean(),
+    size_unit_decimal: jiig.f.boolean(),
+    tags: jiig.f.comma_tuple(),
+    archive_folder: jiig.f.filesystem_folder(absolute_path=True) = constants.DEFAULT_ARCHIVE_FOLDER,
+    source_name: jiig.f.text() = os.path.basename(os.getcwd()),
+    source_folder: jiig.f.filesystem_folder(absolute_path=True) = '.',
 ):
-    """Manage and view archive catalog folders."""
+    """
+    Manage and view archive catalog folders.
+
+    :param runtime: Jiig runtime API.
+    :param long_format: Long format to display extra information.
+    :param age_max: Maximum archive age [^age_option].
+    :param age_min: Minimum archive age [^age_option].
+    :param date_max: Maximum (latest) archive date.
+    :param date_min: Minimum (earliest) archive date.
+    :param interval_max: Maximum interval (n[HMS]) between saves to consider.
+    :param interval_min: Minimum interval (n[HMS]) between saves to consider.
+    :param size_unit_binary: Format size as binary 1024-based KiB, MiB, etc..
+    :param size_unit_decimal: Format size as decimal 1000-based KB, MB, etc..
+    :param tags: Comma-separated archive tags.
+    :param archive_folder: Archive folder.
+    :param source_name: Source name.
+    :param source_folder: Source folder.
+    """
     def _get_headers() -> Iterator[Text]:
         yield 'date/time'
         yield 'method'

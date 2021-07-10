@@ -15,5 +15,3 @@ METHOD_MAP: Dict[Text, Type[ArchiveMethodBase]] = {
     'xz': ArchiveMethodXZ,
     'zip': ArchiveMethodZip,
 }
-
-DEFAULT_METHOD = 'gz'

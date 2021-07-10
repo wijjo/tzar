@@ -2,15 +2,19 @@
 
 import jiig
 
-from tzar import arguments
 from tzar.runtime import TzarRuntime
 
 
 # noinspection PyUnusedLocal
-@jiig.task
+@jiig.task()
 def delete(
     runtime: TzarRuntime,
-    archive_path: arguments.archive_paths_argument,
+    archive_paths: jiig.f.filesystem_object(exists=True, repeat=(1, None)),
 ):
-    """Delete archive(s). [^destructive]"""
+    """
+    Delete archive(s). [^destructive]
+
+    :param runtime: Jiig runtime API.
+    :param archive_paths: Path(s) to source archive file or folder.
+    """
     raise NotImplementedError
