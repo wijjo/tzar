@@ -33,7 +33,7 @@ def save(
     gitignore: jiig.f.boolean(),
     keep_list: jiig.f.boolean(),
     pending: jiig.f.boolean(),
-    tags: jiig.f.comma_tuple(),
+    tags: jiig.f.comma_list(),
     archive_folder: jiig.f.filesystem_folder(absolute_path=True) = constants.DEFAULT_ARCHIVE_FOLDER,
     source_name: jiig.f.text() = os.path.basename(os.getcwd()),
     source_folder: jiig.f.filesystem_folder(absolute_path=True) = '.',

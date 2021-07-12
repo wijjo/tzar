@@ -42,7 +42,7 @@ def catalog(
     interval_min: jiig.f.interval(),
     size_unit_binary: jiig.f.boolean(),
     size_unit_decimal: jiig.f.boolean(),
-    tags: jiig.f.comma_tuple(),
+    tags: jiig.f.comma_list(),
     archive_folder: jiig.f.filesystem_folder(absolute_path=True) = constants.DEFAULT_ARCHIVE_FOLDER,
     source_name: jiig.f.text() = os.path.basename(os.getcwd()),
     source_folder: jiig.f.filesystem_folder(absolute_path=True) = '.',

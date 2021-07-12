@@ -43,7 +43,7 @@ def prune(
     date_min: jiig.f.timestamp(),
     interval_max: jiig.f.interval(),
     interval_min: jiig.f.interval(),
-    tags: jiig.f.comma_tuple(),
+    tags: jiig.f.comma_list(),
     no_confirmation: jiig.f.boolean(),
     archive_folder: jiig.f.filesystem_folder(absolute_path=True) = constants.DEFAULT_ARCHIVE_FOLDER,
     source_name: jiig.f.text() = os.path.basename(os.getcwd()),
