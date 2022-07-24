@@ -66,6 +66,30 @@ For now `tzar` has no configuration file. The Jiig core supports aliases that
 allow operations and options to be captured and used. Aliases can be scoped to
 particular locations, but can also apply globally.
 
+### Alias example: creation
+
+The example below demonstrates alias creation with different options for
+different locations. Each location has its own compression method and
+exclusions. But it represents a single logical command.
+
+```shell
+$ cd /my/project1
+$ tzar alias set .bkp save -m gz -e __cache__
+$ cd /my/project2
+$ tzar alias set .bkp save -m zip -e dist -e build 
+```
+
+### Alias example: usage
+
+The example below
+
+```shell
+$ cd /my/project1
+$ tzar .bkp
+$ cd /my/project2
+$ tzar .bkp 
+```
+
 ## Installation (to run from local source repository).
 
 The following examples place Tzar and Jiig under `/usr/local` and create
