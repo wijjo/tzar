@@ -70,7 +70,7 @@ particular locations, but can also apply globally.
 
 The example below demonstrates alias creation with different options for
 different locations. Each location has its own compression method and
-exclusions. But it represents a single logical command.
+exclusions. But the alias name represents a single logical command.
 
 ```shell
 $ cd /my/project1
@@ -81,7 +81,8 @@ $ tzar alias set .bkp save -m zip -e dist -e build
 
 ### Alias example: usage
 
-The example below
+The example below demonstrates using a named alias with per-location
+customizations. It is based on the creation example above.
 
 ```shell
 $ cd /my/project1
