@@ -4,96 +4,101 @@ Simplified compressed archive management.
 
 ## Features
 
-* Minimal CLI options/arguments required for backup operations.
-* Generate archive names based on working folder and time.
+* Minimal CLI options/arguments are required for basic backup operations.
+* Automatically generated archive names based on the working folder and time.
 * Use faster compression programs and multiple cores, when available.
-* Save location-specific defaults in configuration file.
+* Save location-specific options as tzar aliases.
+* Full command line help using the `help` sub-command.
 
-## Tzar input specification
+## Tzar command line overview
 
-For simplicity and consistency `tzar` does not take a source file/folder
-specification. It operates solely on the working folder. It can be optionally
-tweaked to exclude files and folders.
+For simplicity, `tzar` does not normally need to have a source file/folder
+specified. By default it operates on the working folder, but can also be pointed
+at anything from anywhere. Options are also available to exclude files and
+folders. Complex option sets can be saved as aliases.
 
-## Tzar output specification
+Also for simplicity, Tzar defaults to automatically naming saved archives using
+the source folder name and a timestamp. It place archives in a `../tzarchive`
+folder relative to the source location. It uses standard compressed archive
+naming conventions for the file extensions.
 
-Tzar creates an archive file or populates a target folder based on a containing
-folder, a name suffix temple, and an extension when it is an archive file.
+For example, the `tzar save` command creates a timestamped `gzip` archive of the
+working folder in `../tzarchive`. To use `xz` compression instead of `gzip`, add
+the `-m xz` option.
 
-### Target base folder
+### Target archive names
 
-The target base folder can be a relative or absolute path.
+Target archive names use the source name plus a suffix. The default suffix
+format can be overridden with a template that accepts normal characters and
+`time.strftime()` format codes for date/time-based names. 
 
-Special shell symbols like "~" for the home folder and ".." for the parent
-folder ar expanded.
+The suffix also supports converting an ending '#' character to a unique counter
+to avoid base file name collisions.
 
-A folder path ending with "/**" indicates that the source folder should be added
-to the output folder path as a relative sub-folder. In effect, this allows the
-backup structure to mirror a source folder tree.
-
-### Target name suffix
-
-The name suffix template can include normal characters and `time.strftime()`
-format codes for date/time-based names.
-
-An ending '#' character appends a unique counter to the file name, based on the
-maximum counter value plus one. Please note that the '#' character only has
-special meaning as the last character, and when date/time `%` codes are not
-being used for unique name generation.
+Please note that the '#' character only has special meaning as the last
+character, and only has an effect when date/time `%` codes are not being used
+for unique name generation.
 
 ### Target path post-processing
 
-"$<NAME>" environment variables in the final output path are expanded.
+"$NAME" environment variables are expanded in the final output path.
 
-## Commands
+## Command overview
 
-Tzar command names select different archival methods.
+The commands below are commonly used. Please browse the `tzar` command line help
+system for more information about available sub-commands.
 
-* `tzar gz` creates `.tar.gz` compressed archives.
-* `tzar xz` creates `.tar.xz` compressed archives.
-* `tzar zip` creates `.zip` compressed archives.
-* `tzar sync` performs folder synchronization using `rsync`.
+* `tzar help` or `tzar help COMMAND ...` provides top level or sub-command help.
+* `tzar save` creates a timestamped `gzip` archive of the working folder in
+  `../tzarchive`.
+* `tzar save -m zip` and `tzar save -m xz` archives the working folder using
+  `zip` or `xz` compression.
+* `tzar save -m files` uses `rsync` to copy files into a `../tzarchive`
+  sub-folder.
+* `tzar catalog` lists timestamps of existing archives of the working folder.
+* `tzar catalog -l` lists timestamps and file names of existing archives of the
+  working folder.
+* `tzar delete` and `tzar prune` support clearing out excess saved archives.
 
-## Configuration
+## Configuration and aliases
 
-For now `tzar` has no configuration. When the Jiig core supports aliases that
-feature will allow operations to be captured, and they will be scope-able to
-particular locations.
+For now `tzar` has no configuration file. The Jiig core supports aliases that
+allow operations and options to be captured and used. Aliases can be scoped to
+particular locations, but can also apply globally.
 
-## Install (runnable source).
+## Installation (to run from local source repository).
 
-### 1) Clone Tzar to a local folder.
+The following examples place Tzar and Jiig under `/usr/local` and create
+symlinks in `/usr/local/bin`, assuming that folder is in the shell execution
+path.
 
-* See: https://github.com/wijjo/tzar
+Alternatively, you can place Tzar and Jiig under your home folder and create
+symlinks in `~/bin`, assuming it is in your shell execution path.
 
-### 2) Clone Jiig to a local folder.
+### 1) Clone Jiig to a local folder and add the `jiig` command to the path.
+
+Jiig is a framework for building multi-command CLI tools. Tzar uses Jiig to
+implement command line parsing, task execution, and alias management.
 
 * See: https://github.com/wijjo/jiig
 
-Jiig is a framework for building multi-command CLI tools. Tzar uses Jiig to
-implement command line parsing and task execution.
-
-### 3) Add the Jiig root folder to the system path.
-
-### 4) Add the Tzar command to the system PATH.
-
-#### Option 1: Add the Tzar folder to the shell `PATH`.
-
-Update the `PATH` environment variable to include the root Tzar local repository
-folder, e.g. in `~/.bashrc`.
-
-#### Option 2: Symlink the `tzar` script to a folder that is already in the path.
-
-The following example assumes `~/bin` exists and is already in the system
-`PATH`. Adjust based on the actual Tzar local repository location.
-
-```bash
-$ cd ~/bin
-$ ln -s /path/to/tzar/tzar .
+```shell
+$ cd /usr/local
+$ git clone https://github.com/wijjo/jiig.git
+$ ln -s /usr/local/jiig/bin/jiig /usr/local/bin
 ```
 
-### 4) Create the Tzar Python virtual environment.
+### 2) Clone Tzar to a local folder and add the `tzar` command to the path.
+
+* See: https://github.com/wijjo/tzar
+
+```shell
+$ cd /usr/local
+$ git clone https://github.com/wijjo/tzar.git
+$ ln -s /usr/local/tzar/bin/tzar /usr/local/bin
+```
+
+### 3) Create the Tzar Python virtual environment.
 
 Run the `tzar` command. The first run builds a virtual environment. At this
 point it's ready to use.
-
