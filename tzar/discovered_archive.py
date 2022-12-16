@@ -17,10 +17,10 @@
 
 """Discovered archive file."""
 
-import os
 from dataclasses import dataclass
+from pathlib import Path
 from time import mktime
-from typing import Text, Type, List, Optional
+from typing import Type
 
 from .archive_method import ArchiveMethodBase, RegisteredMethod
 from .constants import TIMESTAMP_REGEX
@@ -29,27 +29,23 @@ from .methods import METHOD_MAP
 
 @dataclass
 class ArchiveNameData:
-    source_name: Text
-    time_stamp: Optional[float]
-    tags: List[Text]
+    source_name: str
+    time_stamp: float | None
+    tags: list[str]
 
 
 @dataclass
 class DiscoveredArchive:
-    path: Text
+    path: Path
     file_time: float
     file_size: int
-    method_name: Text
+    method_name: str
     method_cls: Type[ArchiveMethodBase]
-    _archive_name_data: Optional[ArchiveNameData] = None
+    _archive_name_data: ArchiveNameData | None = None
 
     @property
-    def file_name(self) -> Text:
-        return os.path.basename(self.path)
-
-    @property
-    def archive_name(self) -> Text:
-        return self.method_cls.handle_get_name(self.file_name)
+    def archive_name(self) -> str:
+        return self.method_cls.handle_get_name(self.path.name)
 
     @property
     def archive_name_data(self) -> ArchiveNameData:
@@ -57,8 +53,8 @@ class DiscoveredArchive:
             name_parts = self.archive_name.split('_')
             source_name = name_parts[0]
             # Parse name to extract date, time, and tags.
-            tags: List[Text] = []
-            time_stamp: Optional[float] = None
+            tags: list[str] = []
+            time_stamp: float | None = None
             if len(name_parts) >= 2:
                 timestamp_matched = TIMESTAMP_REGEX.match(name_parts[1])
                 if timestamp_matched:
@@ -79,7 +75,7 @@ class DiscoveredArchive:
         return self._archive_name_data
 
     @property
-    def source_name(self) -> Text:
+    def source_name(self) -> str:
         return self.archive_name_data.source_name
 
     @property
@@ -89,20 +85,25 @@ class DiscoveredArchive:
         return self.file_time
 
     @property
-    def tags(self) -> List[Text]:
+    def tags(self) -> list[str]:
         return self.archive_name_data.tags
 
     @classmethod
-    def get_method(cls, archive_path: Text, assumed_type: int = None) -> RegisteredMethod:
+    def get_method(cls,
+                   archive_path: str | Path,
+                   assumed_type: int = None,
+                   ) -> RegisteredMethod:
         for name, method_cls in METHOD_MAP.items():
             base_path = method_cls.check_supported(
-                archive_path, assumed_type=assumed_type)
+                Path(archive_path), assumed_type=assumed_type)
             if base_path:
                 return RegisteredMethod(name, method_cls)
         raise ValueError(f'No suitable archive method for "{archive_path}".')
 
     @classmethod
-    def new(cls, path: Text) -> 'DiscoveredArchive':
+    def new(cls,
+            path: str | Path,
+            ) -> 'DiscoveredArchive':
         """
         Create DiscoveredArchive for physical file or folder.
 
@@ -110,8 +111,10 @@ class DiscoveredArchive:
         :return: DiscoveredArchive instance.
         :raise ValueError: when the input is not a valid archive
         """
+        if not isinstance(path, Path):
+            path = Path(path)
         registered_method = cls.get_method(path)
-        file_stat = os.stat(path)
+        file_stat = path.stat()
         return cls(path=path,
                    file_time=file_stat.st_mtime,
                    file_size=file_stat.st_size,
@@ -120,9 +123,10 @@ class DiscoveredArchive:
 
     @classmethod
     def new_fake_file(cls,
-                      path: Text,
+                      path: str | Path,
                       file_size: int,
-                      file_time: float) -> 'DiscoveredArchive':
+                      file_time: float,
+                      ) -> 'DiscoveredArchive':
         """
         Create DiscoveredArchive for fake file.
 
@@ -132,6 +136,8 @@ class DiscoveredArchive:
         :return: DiscoveredArchive instance.
         :raise ValueError: when the input is not a valid archive
         """
+        if not isinstance(path, Path):
+            path = Path(path)
         registered_method = cls.get_method(path, assumed_type=1)
         return cls(path=path,
                    file_time=file_time,
@@ -141,7 +147,7 @@ class DiscoveredArchive:
 
     @classmethod
     def new_fake_folder(cls,
-                        path: Text,
+                        path: str | Path,
                         file_time: float) -> 'DiscoveredArchive':
         """
         Create DiscoveredArchive for fake folder.
@@ -151,6 +157,8 @@ class DiscoveredArchive:
         :return: DiscoveredArchive instance.
         :raise ValueError: when the input is not a valid archive
         """
+        if not isinstance(path, Path):
+            path = Path(path)
         registered_method = cls.get_method(path, assumed_type=2)
         return cls(path=path,
                    file_time=file_time,

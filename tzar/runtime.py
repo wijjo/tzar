@@ -21,16 +21,16 @@ Generic archiver to drive selected archive method.
 
 import os
 from dataclasses import dataclass
-from glob import glob
+from pathlib import Path
 from tempfile import NamedTemporaryFile
 from time import strftime, struct_time, localtime
-from typing import Text, List, Optional, Set, Sequence, Iterator, Collection
+from typing import Sequence, Iterator, Collection
 
-import jiig
+from jiig.runtime import Runtime
 from jiig.util.log import abort, log_error, log_message, log_warning
 from jiig.util.filesystem import create_folder, short_path, iterate_filtered_files, \
     temporary_working_folder
-from jiig.util.general import format_human_byte_count
+from jiig.util.text.human_units import format_human_byte_count
 from jiig.util.process import shell_command_string
 
 from . import methods
@@ -43,26 +43,22 @@ from .discovered_archive import DiscoveredArchive
 @dataclass
 class CatalogItem:
     """Data for a catalog archive."""
-    method_name: Text
-    path: Text
-    tags: List[Text]
+    method_name: str
+    path: Path
+    tags: list[str]
     size: int
     time: float
-
-    @property
-    def file_name(self) -> Text:
-        return os.path.basename(self.path)
 
     @property
     def time_struct(self) -> struct_time:
         return localtime(self.time)
 
     @property
-    def time_string(self) -> Text:
+    def time_string(self) -> str:
         return strftime('%Y-%m-%d %H:%M.%S', self.time_struct)
 
 
-def _tags_from_string(tags: Text = None) -> Iterator[Text]:
+def _tags_from_string(tags: str = None) -> Iterator[str]:
     if tags:
         for tag in tags.split(','):
             if tag.isalnum():
@@ -71,10 +67,10 @@ def _tags_from_string(tags: Text = None) -> Iterator[Text]:
                 log_error(f'Bad non-alphanumeric archive tag "{tag}".')
 
 
-class TzarRuntime(jiig.Runtime):
+class TzarRuntime(Runtime):
 
     def list_archive(self,
-                     archive_path: Text,
+                     archive_path: str | Path,
                      ) -> Sequence[MethodListItem]:
         """
         List tarball contents.
@@ -89,19 +85,19 @@ class TzarRuntime(jiig.Runtime):
             self.abort(exc)
 
     @staticmethod
-    def get_method_names() -> List[Text]:
+    def get_method_names() -> list[str]:
         """Provide method name list, e.g. for method option help text."""
         return list(sorted(methods.METHOD_MAP.keys()))
 
     def save_archive(self,
-                     source_folder: Text,
-                     archive_folder: Text,
-                     method_name: Text,
-                     source_name: Text = None,
-                     tags: Text = None,
+                     source_folder: str | Path,
+                     archive_folder: str | Path,
+                     method_name: str,
+                     source_name: str = None,
+                     tags: str = None,
                      pending: bool = False,
                      gitignore: bool = False,
-                     excludes: List[Text] = None,
+                     excludes: list[str] = None,
                      timestamp: bool = False,
                      progress: bool = False,
                      keep_list: bool = False):
@@ -120,9 +116,13 @@ class TzarRuntime(jiig.Runtime):
         :param progress: show progress if True
         :param keep_list: do not delete temporary file list file if True
         """
+        if not isinstance(source_folder, Path):
+            source_folder = Path(source_folder)
+        if not isinstance(archive_folder, Path):
+            archive_folder = Path(archive_folder)
         if source_name is None:
-            source_name = os.path.basename(source_folder)
-        tag_list: List[Text] = list(_tags_from_string(tags))
+            source_name = source_folder.name
+        tag_list: list[str] = list(_tags_from_string(tags))
         method_cls = methods.METHOD_MAP.get(method_name)
         if not method_cls:
             raise RuntimeError(f'Bad archive method name "{method_name}".')
@@ -134,7 +134,7 @@ class TzarRuntime(jiig.Runtime):
                 name_parts.append(strftime(TIMESTAMP_FORMAT))
             if tag_list:
                 name_parts.extend(tag_list)
-            full_folder_path = os.path.join(archive_folder, '_'.join(name_parts))
+            full_folder_path = archive_folder / '_'.join(name_parts)
             source_file_iterator = iterate_filtered_files(source_folder,
                                                           pending=pending,
                                                           gitignore=gitignore,
@@ -155,8 +155,8 @@ class TzarRuntime(jiig.Runtime):
             total_files = 0
             total_folders = 0
             total_bytes = 0
-            visited_folders: Set[Text] = set()
-            with NamedTemporaryFile(prefix=f'tzar_{os.path.basename(source_folder)}_',
+            visited_folders: set[str] = set()
+            with NamedTemporaryFile(prefix=f'tzar_{source_folder.name}_',
                                     suffix='.txt',
                                     mode='w',
                                     encoding='utf-8',
@@ -164,22 +164,22 @@ class TzarRuntime(jiig.Runtime):
                 if keep_list:
                     log_message(f'File list: {temp_file.name}')
                 for file_path in source_file_iterator:
-                    if os.path.isfile(file_path):
-                        temp_file.write(file_path)
+                    if file_path.is_file():
+                        temp_file.write(str(file_path))
                         temp_file.write(os.linesep)
                         total_files += 1
-                        total_bytes += os.stat(file_path, follow_symlinks=False).st_size
-                        folder_path = os.path.dirname(file_path) or '.'
+                        total_bytes += file_path.stat(follow_symlinks=False).st_size
+                        folder_path = file_path.parent or Path('.')
                         if folder_path not in visited_folders:
-                            visited_folders.add(folder_path)
+                            visited_folders.add(str(folder_path))
                             total_folders += 1
-                            total_bytes += os.stat(folder_path, follow_symlinks=False).st_size
+                            total_bytes += folder_path.stat(follow_symlinks=False).st_size
                     else:
                         log_warning('Source path is not a file.', file_path)
                 temp_file.flush()
                 method_data = MethodSaveData(
                     source_path=source_folder,
-                    source_list_path=temp_file.name,
+                    source_list_path=Path(temp_file.name),
                     archive_path=full_folder_path,
                     verbose=self.options.verbose and not progress,
                     dry_run=self.options.dry_run,
@@ -202,17 +202,17 @@ class TzarRuntime(jiig.Runtime):
                     abort('Archive command failed.', full_command)
 
     def list_catalog(self,
-                     source_folder: Text,
-                     archive_folder: Text,
-                     source_name: Text = None,
+                     source_folder: str | Path,
+                     archive_folder: str | Path,
+                     source_name: str = None,
                      date_min: float = None,
                      date_max: float = None,
                      age_min: float = None,
                      age_max: float = None,
                      interval_min: float = None,
                      interval_max: float = None,
-                     tags: Collection[Text] = None,
-                     ) -> List[CatalogItem]:
+                     tags: Collection[str] = None,
+                     ) -> list[CatalogItem]:
         """
         List catalog archives.
 
@@ -228,20 +228,24 @@ class TzarRuntime(jiig.Runtime):
         :param tags: optional tags for filtering catalog archives (all are required)
         :return: found catalog items
         """
+        if not isinstance(source_folder, Path):
+            source_folder = Path(source_folder)
+        if not isinstance(archive_folder, Path):
+            archive_folder = Path(archive_folder)
         if source_name is None:
-            source_name = os.path.basename(source_folder)
+            source_name = source_folder.name
         timestamp_min = max(filter(lambda ts: ts is not None, (date_min, age_max)),
                             default=None)
         timestamp_max = min(filter(lambda ts: ts is not None, (date_max, age_min)),
                             default=None)
-        if not os.path.isdir(archive_folder):
+        if not archive_folder.is_dir():
             self.error('Catalog archive folder does not exist.', archive_folder)
             return []
-        if not os.path.isdir(source_folder):
+        if not source_folder.is_dir():
             self.error(f'Source folder does not exist.', source_folder)
             return []
-        discovered_archives: List[DiscoveredArchive] = []
-        for path in glob(os.path.join(archive_folder, '*')):
+        discovered_archives: list[DiscoveredArchive] = []
+        for path in archive_folder.glob('*'):
             try:
                 discovered_archives.append(DiscoveredArchive.new(path))
             except ValueError as exc:
@@ -259,14 +263,14 @@ class TzarRuntime(jiig.Runtime):
                                        filter_tag_set=filter_tag_set)
 
     @staticmethod
-    def build_catalog_list(archives: List[DiscoveredArchive],
-                           source_name: Text,
+    def build_catalog_list(archives: list[DiscoveredArchive],
+                           source_name: str,
                            timestamp_min: float = None,
                            timestamp_max: float = None,
                            interval_min: float = None,
                            interval_max: float = None,
-                           filter_tag_set: Optional[Set[Text]] = None,
-                           ) -> List[CatalogItem]:
+                           filter_tag_set: set[str] | None = None,
+                           ) -> list[CatalogItem]:
         """
         General function for building archive catalog lists.
 
@@ -281,7 +285,7 @@ class TzarRuntime(jiig.Runtime):
         :param filter_tag_set: optional required tags
         :return:
         """
-        items: List[CatalogItem] = []
+        items: list[CatalogItem] = []
         for archive in archives:
             if ((archive.source_name == source_name)
                     and (timestamp_min is None or archive.time_stamp >= timestamp_min)
@@ -296,7 +300,7 @@ class TzarRuntime(jiig.Runtime):
         if items:
             items.sort(key=lambda x: x.time, reverse=True)
             if interval_min is not None or interval_max is not None:
-                filtered_items: List[CatalogItem] = [items[0]]
+                filtered_items: list[CatalogItem] = [items[0]]
                 for item_idx, item in enumerate(items[1:], start=1):
                     delta_time = items[item_idx - 1].time - item.time
                     if ((interval_min is None or delta_time >= interval_min)

@@ -21,8 +21,8 @@ import os
 from typing import Tuple, Text, Iterator
 
 import jiig
-from jiig.util.general import format_table
 from jiig.util.filesystem import short_path
+from jiig.util.text.table import format_table
 
 from tzar import constants
 from tzar.runtime import TzarRuntime, CatalogItem
@@ -98,7 +98,7 @@ def catalog(
             yield format_file_size(item.size,
                                    size_unit_binary=size_unit_binary,
                                    size_unit_decimal=size_unit_decimal)
-            yield short_path(item.file_name, is_folder=os.path.isdir(item.path))
+            yield short_path(item.path.name, is_folder=os.path.isdir(item.path))
 
     def _get_rows() -> Iterator[Tuple[Text]]:
         for item in runtime.list_catalog(

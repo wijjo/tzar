@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Tzar.  If not, see <https://www.gnu.org/licenses/>.
 
-import os
 from time import strptime, mktime
 import unittest
 from typing import List, Text, Optional
@@ -58,7 +57,7 @@ class TestCatalog(unittest.TestCase):
                                                interval_min=interval_min,
                                                interval_max=interval_max,
                                                filter_tag_set=filter_tag_set)
-        actual = [os.path.basename(item.path) for item in items]
+        actual = [item.path.name for item in items]
         if actual != expected:
             raise AssertionError(f'Mismatch: actual={actual} expected={expected}')
 

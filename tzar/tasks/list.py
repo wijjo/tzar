@@ -18,10 +18,9 @@
 """Tzar list command."""
 
 from time import localtime, strftime
-from typing import Text, Tuple
 
 import jiig
-from jiig.util.general import format_table
+from jiig.util.text.table import format_table
 
 from tzar import constants
 from tzar.archive_method import MethodListItem
@@ -54,12 +53,12 @@ def list_(
     :param archive_paths: Path(s) to source archive file or folder.
     """
 
-    def _item_tuple(item: MethodListItem) -> Tuple[Text, Text, Text]:
+    def _item_tuple(item: MethodListItem) -> tuple[str, str, str]:
         file_size = format_file_size(item.size,
                                      size_unit_binary=size_unit_binary,
                                      size_unit_decimal=size_unit_decimal)
         file_time = strftime('%c', localtime(item.time))
-        return file_size, file_time, item.path
+        return file_size, file_time, str(item.path)
 
     for archive_path_item in archive_paths:
         archive_items = runtime.list_archive(archive_path_item)

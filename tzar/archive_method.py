@@ -20,7 +20,8 @@ Archive support base class.
 """
 
 from dataclasses import dataclass
-from typing import List, Text, Sequence, Optional, Type
+from pathlib import Path
+from typing import Sequence, Type
 
 from jiig.util.log import log_warning
 from jiig.util.filesystem import find_system_program
@@ -33,9 +34,9 @@ PV_WARNED = False
 class MethodSaveData:
     """Input data for archive saving."""
 
-    source_path: Text
-    source_list_path: Text
-    archive_path: Text
+    source_path: Path
+    source_list_path: Path
+    archive_path: Path
     verbose: bool
     dry_run: bool
     progress: bool
@@ -65,24 +66,26 @@ class MethodSaveData:
 @dataclass
 class MethodSaveResult:
     """Output data received after saving archive."""
-    archive_path: Text
-    command_arguments: List[Text]
+    archive_path: Path
+    command_arguments: list[str]
 
 
 @dataclass
 class MethodListItem:
     """Data received for an archive file when listing archive contents."""
-    path: Text
+    path: Path
     time: float
     # File size or None if it is a folder.
-    size: Optional[int]
+    size: int | None
 
 
 class ArchiveMethodBase:
     """Base archive method class."""
 
     @classmethod
-    def handle_get_name(cls, archive_name: Text) -> Text:
+    def handle_get_name(cls,
+                        archive_name: str,
+                        ) -> str:
         """
         Required override to isolate base archive name and strip any extension as needed.
 
@@ -92,7 +95,9 @@ class ArchiveMethodBase:
         raise NotImplementedError
 
     @classmethod
-    def handle_save(cls, save_data: MethodSaveData) -> MethodSaveResult:
+    def handle_save(cls,
+                    save_data: MethodSaveData,
+                    ) -> MethodSaveResult:
         """
         Required override for saving an archive.
 
@@ -102,7 +107,9 @@ class ArchiveMethodBase:
         raise NotImplementedError
 
     @classmethod
-    def handle_list(cls, archive_path: Text) -> Sequence[MethodListItem]:
+    def handle_list(cls,
+                    archive_path: Path,
+                    ) -> Sequence[MethodListItem]:
         """
         Required override for listing archive contents.
 
@@ -115,9 +122,9 @@ class ArchiveMethodBase:
 
     @classmethod
     def check_supported(cls,
-                        archive_path: Text,
+                        archive_path: Path,
                         assumed_type: int = None,
-                        ) -> Optional[Text]:
+                        ) -> Path | None:
         """
         Required override for testing if an archive is handled by a particular method.
 
@@ -131,5 +138,5 @@ class ArchiveMethodBase:
 @dataclass
 class RegisteredMethod:
     """Data for registered archive method."""
-    name: Text
+    name: str
     method_cls: Type[ArchiveMethodBase]

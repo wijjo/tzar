@@ -19,10 +19,10 @@
 Support for Zip archives.
 """
 
-import os
-from time import mktime
 import zipfile
-from typing import Text, Sequence, Optional
+from pathlib import Path
+from time import mktime
+from typing import Sequence
 
 from tzar.archive_method import MethodSaveData, ArchiveMethodBase, MethodSaveResult, MethodListItem
 
@@ -30,7 +30,9 @@ from tzar.archive_method import MethodSaveData, ArchiveMethodBase, MethodSaveRes
 class ArchiveMethodZip(ArchiveMethodBase):
 
     @classmethod
-    def handle_get_name(cls, archive_name: Text) -> Text:
+    def handle_get_name(cls,
+                        archive_name: str,
+                        ) -> str:
         """
         Required override to isolate base archive name and strip any extension as needed.
 
@@ -42,7 +44,9 @@ class ArchiveMethodZip(ArchiveMethodBase):
         return archive_name
 
     @classmethod
-    def handle_save(cls, save_data: MethodSaveData) -> MethodSaveResult:
+    def handle_save(cls,
+                    save_data: MethodSaveData,
+                    ) -> MethodSaveResult:
         """
         Required override for saving an archive.
 
@@ -54,12 +58,14 @@ class ArchiveMethodZip(ArchiveMethodBase):
             cmd_args.append('-q')
         if save_data.pv_progress:
             cmd_args.extend(['|', 'pv', '-bret'])
-        zip_path = save_data.archive_path + '.zip'
-        cmd_args.extend(['>', zip_path])
+        zip_path = Path(str(save_data.archive_path) + '.zip')
+        cmd_args.extend(['>', str(zip_path)])
         return MethodSaveResult(archive_path=zip_path, command_arguments=cmd_args)
 
     @classmethod
-    def handle_list(cls, archive_path: Text) -> Sequence[MethodListItem]:
+    def handle_list(cls,
+                    archive_path: Path,
+                    ) -> Sequence[MethodListItem]:
         """
         Required override for listing archive contents.
 
@@ -70,13 +76,13 @@ class ArchiveMethodZip(ArchiveMethodBase):
             for info in zip_file.infolist():
                 file_size = info.file_size if not info.is_dir() else None
                 file_time = mktime(info.date_time + (0, 0, -1))
-                yield MethodListItem(path=info.filename, time=file_time, size=file_size)
+                yield MethodListItem(path=Path(info.filename), time=file_time, size=file_size)
 
     @classmethod
     def check_supported(cls,
-                        archive_path: Text,
+                        archive_path: Path,
                         assumed_type: int = None,
-                        ) -> Optional[Text]:
+                        ) -> Path | None:
         """
         Required override for testing if an archive is handled by a particular method.
 
@@ -85,10 +91,10 @@ class ArchiveMethodZip(ArchiveMethodBase):
         :return: base filename or path if it is handled or None if it is not
         """
         if assumed_type is None:
-            if not os.path.isfile(archive_path):
+            if not archive_path.is_file():
                 return None
         elif assumed_type != 1:
             return None
-        if not archive_path.endswith('.zip'):
+        if not str(archive_path).endswith('.zip'):
             return None
-        return archive_path[:-4]
+        return Path(str(archive_path[:-4]))

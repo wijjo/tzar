@@ -19,8 +19,8 @@
 Archive support for file-based cloning using rsync.
 """
 
-import os
-from typing import Text, Sequence, Optional
+from pathlib import Path
+from typing import Sequence
 
 from jiig.util.filesystem import create_folder
 
@@ -30,7 +30,9 @@ from tzar.archive_method import MethodSaveData, ArchiveMethodBase, MethodSaveRes
 class ArchiveMethodSync(ArchiveMethodBase):
 
     @classmethod
-    def handle_get_name(cls, archive_name: Text) -> Text:
+    def handle_get_name(cls,
+                        archive_name: str,
+                        ) -> str:
         """
         Required override to isolate base archive name and strip any extension as needed.
 
@@ -40,14 +42,16 @@ class ArchiveMethodSync(ArchiveMethodBase):
         return archive_name
 
     @classmethod
-    def handle_save(cls, save_data: MethodSaveData) -> MethodSaveResult:
+    def handle_save(cls,
+                    save_data: MethodSaveData,
+                    ) -> MethodSaveResult:
         """
         Required override for saving an archive.
 
         :param save_data: input parameters for save operation
         :return: save result data
         """
-        create_folder(os.path.dirname(save_data.archive_path))
+        create_folder(save_data.archive_path.parent)
         cmd_args = ['rsync', '-a', f'--include-from={save_data.source_list_path}']
         if save_data.verbose:
             cmd_args.append('-v')
@@ -55,7 +59,9 @@ class ArchiveMethodSync(ArchiveMethodBase):
         return MethodSaveResult(archive_path=save_data.archive_path, command_arguments=cmd_args)
 
     @classmethod
-    def handle_list(cls, archive_path: Text) -> Sequence[MethodListItem]:
+    def handle_list(cls,
+                    archive_path: Path,
+                    ) -> Sequence[MethodListItem]:
         """
         Required override for listing archive contents.
 
@@ -66,9 +72,9 @@ class ArchiveMethodSync(ArchiveMethodBase):
 
     @classmethod
     def check_supported(cls,
-                        archive_path: Text,
+                        archive_path: Path,
                         assumed_type: int = None,
-                        ) -> Optional[Text]:
+                        ) -> Path | None:
         """
         Required override for testing if an archive is handled by a particular method.
 
@@ -76,6 +82,6 @@ class ArchiveMethodSync(ArchiveMethodBase):
         :param assumed_type: For testing, 1=file, 2=folder, None=check physical object
         :return: base filename or path if it is handled or None if it is not
         """
-        if assumed_type == 2 or (assumed_type is None and os.path.isdir(archive_path)):
+        if assumed_type == 2 or (assumed_type is None and archive_path.is_dir()):
             return archive_path
         return None

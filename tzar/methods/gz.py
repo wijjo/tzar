@@ -19,8 +19,8 @@
 Support for GZ archives.
 """
 
-import os
-from typing import Text, Sequence, Optional
+from pathlib import Path
+from typing import Sequence
 
 from tzar.archive_method import MethodSaveData, ArchiveMethodBase, MethodSaveResult, MethodListItem
 
@@ -30,7 +30,9 @@ from .tarball import handle_tarball_save, handle_tarball_list, handle_tarball_ge
 class ArchiveMethodGZ(ArchiveMethodBase):
 
     @classmethod
-    def handle_get_name(cls, archive_name: Text) -> Text:
+    def handle_get_name(cls,
+                        archive_name: str,
+                        ) -> str:
         """
         Required override to isolate base archive name and strip any extension as needed.
 
@@ -40,7 +42,9 @@ class ArchiveMethodGZ(ArchiveMethodBase):
         return handle_tarball_get_name(archive_name, extension='gz')
 
     @classmethod
-    def handle_save(cls, save_data: MethodSaveData) -> MethodSaveResult:
+    def handle_save(cls,
+                    save_data: MethodSaveData,
+                    ) -> MethodSaveResult:
         """
         Required override for saving an archive.
 
@@ -50,7 +54,9 @@ class ArchiveMethodGZ(ArchiveMethodBase):
         return handle_tarball_save(save_data, compressors=['pigz', 'gzip'], extension='gz')
 
     @classmethod
-    def handle_list(cls, archive_path: Text) -> Sequence[MethodListItem]:
+    def handle_list(cls,
+                    archive_path: Path,
+                    ) -> Sequence[MethodListItem]:
         """
         Required override for listing archive contents.
 
@@ -61,9 +67,9 @@ class ArchiveMethodGZ(ArchiveMethodBase):
 
     @classmethod
     def check_supported(cls,
-                        archive_path: Text,
+                        archive_path: Path,
                         assumed_type: int = None,
-                        ) -> Optional[Text]:
+                        ) -> Path | None:
         """
         Required override for testing if an archive is handled by a particular method.
 
@@ -72,10 +78,10 @@ class ArchiveMethodGZ(ArchiveMethodBase):
         :return: base filename or path if it is handled or None if it is not
         """
         if assumed_type is None:
-            if not os.path.isfile(archive_path):
+            if not archive_path.is_file():
                 return None
         elif assumed_type != 1:
             return None
-        if not archive_path.endswith('.tar.gz'):
+        if not str(archive_path).endswith('.tar.gz'):
             return None
-        return archive_path[:-7]
+        return Path(str(archive_path)[:-7])

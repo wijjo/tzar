@@ -17,18 +17,16 @@
 
 """Tzar utility functions."""
 
-from typing import Text, Optional
-
 from jiig.util.log import log_error
-from jiig.util.general import format_human_byte_count
+from jiig.util.text.human_units import format_human_byte_count
 
 
-def format_file_size(byte_count: Optional[int],
+def format_file_size(byte_count: int | None,
                      decimal_places: int = 1,
                      size_unit_binary: bool = False,
                      size_unit_decimal: bool = False,
-                     default: Text = None
-                     ) -> Text:
+                     default: str = None
+                     ) -> str:
     """
     Format size with support for common size formatting options.
 

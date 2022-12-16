@@ -20,17 +20,18 @@ Tarball archive general support.
 """
 
 import tarfile
-from typing import List, Text, Union, Sequence
+from pathlib import Path
+from typing import Sequence
 
 from jiig.util.filesystem import choose_program_alternative
-from jiig.util.general import make_list
+from jiig.util.collections import make_list
 
 from tzar.archive_method import MethodSaveData, MethodSaveResult, MethodListItem
 
 
 def handle_tarball_save(save_data: MethodSaveData,
-                        compressors: Union[List[Text], Text] = None,
-                        extension: Text = None,
+                        compressors: list[str] | str = None,
+                        extension: str = None,
                         ) -> MethodSaveResult:
     """
     Build command arguments for saving tarball with optional compression+progress.
@@ -40,7 +41,7 @@ def handle_tarball_save(save_data: MethodSaveData,
     :param compressors: compression programs, with optional arguments when it's a sequence
     :return:
     """
-    cmd_args = ['tar', f'cf', '-', '-T', save_data.source_list_path]
+    cmd_args = ['tar', f'cf', '-', '-T', str(save_data.source_list_path)]
     if save_data.verbose:
         cmd_args.append('-v')
     # choose_program_alternative() returns a command argument list.
@@ -52,16 +53,16 @@ def handle_tarball_save(save_data: MethodSaveData,
     if save_data.pv_progress:
         # Create a pipeline with "pv" for progress reporting.
         cmd_args.extend(['|', 'pv', '-bret'])
-    archive_path_parts = [save_data.archive_path, 'tar']
+    archive_path_parts = [str(save_data.archive_path), 'tar']
     if extension:
         archive_path_parts.append(extension)
     archive_path = '.'.join(archive_path_parts)
     cmd_args.extend(['>', archive_path])
-    return MethodSaveResult(archive_path=archive_path, command_arguments=cmd_args)
+    return MethodSaveResult(archive_path=Path(archive_path), command_arguments=cmd_args)
 
 
-def handle_tarball_list(archive_path: Text,
-                        compression: Text = None
+def handle_tarball_list(archive_path: Path,
+                        compression: str = None
                         ) -> Sequence[MethodListItem]:
     """
     Implementation to list tarball contents.
@@ -74,12 +75,12 @@ def handle_tarball_list(archive_path: Text,
     with tarfile.open(archive_path, mode=mode) as tar_file:
         for info in tar_file.getmembers():
             file_size = info.size if not info.isdir() else None
-            yield MethodListItem(path=info.name, time=info.mtime, size=file_size)
+            yield MethodListItem(path=Path(info.name), time=info.mtime, size=file_size)
 
 
-def handle_tarball_get_name(archive_name: Text,
-                            extension: Text = None,
-                            ) -> Text:
+def handle_tarball_get_name(archive_name: str,
+                            extension: str = None,
+                            ) -> str:
     """
     Implementation to preprocess archive name for further parsing.
 
