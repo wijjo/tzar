@@ -122,7 +122,6 @@ class TzarRuntime(Runtime):
             archive_folder = Path(archive_folder)
         if source_name is None:
             source_name = source_folder.name
-        tag_list: list[str] = list(_tags_from_string(tags))
         method_cls = methods.METHOD_MAP.get(method_name)
         if not method_cls:
             raise RuntimeError(f'Bad archive method name "{method_name}".')
@@ -132,8 +131,8 @@ class TzarRuntime(Runtime):
             name_parts = [source_name]
             if timestamp:
                 name_parts.append(strftime(TIMESTAMP_FORMAT))
-            if tag_list:
-                name_parts.extend(tag_list)
+            if tags:
+                name_parts.extend(tags)
             full_folder_path = archive_folder / '_'.join(name_parts)
             source_file_iterator = iterate_filtered_files(source_folder,
                                                           pending=pending,
