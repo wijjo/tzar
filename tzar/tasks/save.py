@@ -25,23 +25,7 @@ from tzar import constants
 from tzar.runtime import TzarRuntime
 
 
-@jiig.task(
-    cli={
-        'options': {
-            'exclude': constants.OPTION_EXCLUDE,
-            'progress': constants.OPTION_PROGRESS,
-            'disable_timestamp': constants.OPTION_DISABLE_TIMESTAMP,
-            'gitignore': constants.OPTION_GITIGNORE,
-            'keep_list': constants.OPTION_KEEP_LIST,
-            'pending': constants.OPTION_PENDING,
-            'tags': constants.OPTION_TAGS,
-            'archive_folder': constants.OPTION_ARCHIVE_FOLDER,
-            'source_name': constants.OPTION_SOURCE_NAME,
-            'source_folder': constants.OPTION_SOURCE_FOLDER,
-            'method': constants.OPTION_METHOD,
-        }
-    }
-)
+@jiig.task
 def save(
     runtime: TzarRuntime,
     exclude: jiig.f.text(repeat=(None, None)),

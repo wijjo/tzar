@@ -19,18 +19,11 @@
 
 import jiig
 
-from tzar import constants
 from tzar.runtime import TzarRuntime
 
 
 # noinspection PyUnusedLocal
-@jiig.task(
-    cli={
-        'options': {
-            'source_folder': constants.OPTION_SOURCE_FOLDER,
-        }
-    }
-)
+@jiig.task
 def compare(
     runtime: TzarRuntime,
     archive_path: jiig.f.filesystem_object(exists=True),

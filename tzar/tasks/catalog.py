@@ -29,25 +29,7 @@ from tzar.runtime import TzarRuntime, CatalogItem
 from tzar.utility import format_file_size
 
 
-@jiig.task(
-    cli={
-        'options': {
-            'long_format': constants.OPTION_LONG_FORMAT,
-            'age_min': constants.OPTION_AGE_MIN,
-            'age_max': constants.OPTION_AGE_MAX,
-            'date_min': constants.OPTION_DATE_MIN,
-            'date_max': constants.OPTION_DATE_MAX,
-            'interval_max': constants.OPTION_INTERVAL_MAX,
-            'interval_min': constants.OPTION_INTERVAL_MIN,
-            'size_unit_binary': constants.OPTION_SIZE_UNIT_BINARY,
-            'size_unit_decimal': constants.OPTION_SIZE_UNIT_DECIMAL,
-            'tags': constants.OPTION_TAGS,
-            'archive_folder': constants.OPTION_ARCHIVE_FOLDER,
-            'source_name': constants.OPTION_SOURCE_NAME,
-            'source_folder': constants.OPTION_SOURCE_FOLDER,
-        }
-    }
-)
+@jiig.task
 def catalog(
     runtime: TzarRuntime,
     long_format: jiig.f.boolean(),

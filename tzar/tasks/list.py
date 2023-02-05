@@ -30,14 +30,7 @@ from tzar.utility import format_file_size
 
 # Trailing underscore avoids conflict with built-in list type, while still
 # serving as default task name, since the underscore is automatically dropped.
-@jiig.task(
-    cli={
-        'options': {
-            'size_unit_binary': constants.OPTION_SIZE_UNIT_BINARY,
-            'size_unit_decimal': constants.OPTION_SIZE_UNIT_DECIMAL,
-        }
-    }
-)
+@jiig.task
 def list_(
     runtime: TzarRuntime,
     size_unit_binary: jiig.f.boolean(),

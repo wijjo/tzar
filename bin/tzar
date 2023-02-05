@@ -21,21 +21,3 @@ Tzar archive manager.
 
 Jiig-based tool to create and manage archives of the working folder.
 """
-
-TOOL_NAME = 'tzar'
-
-PROJECT_NAME = 'Tzar'
-
-DESCRIPTION = 'Simple archive manager.'
-
-VERSION = '0.5'
-
-AUTHOR = 'Steve Cooper'
-
-COPYRIGHT = '2021, Steve Cooper'
-
-PIP_PACKAGES = ['pdoc3']
-
-RUNTIME = 'tzar.runtime'
-
-ROOT_TASK = 'tzar.tasks'

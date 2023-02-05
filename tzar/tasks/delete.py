@@ -23,7 +23,7 @@ from tzar.runtime import TzarRuntime
 
 
 # noinspection PyUnusedLocal
-@jiig.task()
+@jiig.task
 def delete(
     runtime: TzarRuntime,
     archive_paths: jiig.f.filesystem_object(exists=True, repeat=(1, None)),

@@ -35,23 +35,7 @@ from tzar.runtime import TzarRuntime
 
 
 # noinspection PyUnusedLocal
-@jiig.task(
-    cli={
-        'options': {
-            'age_min': constants.OPTION_AGE_MIN,
-            'age_max': constants.OPTION_AGE_MAX,
-            'date_min': constants.OPTION_DATE_MIN,
-            'date_max': constants.OPTION_DATE_MAX,
-            'interval_max': constants.OPTION_INTERVAL_MAX,
-            'interval_min': constants.OPTION_INTERVAL_MIN,
-            'tags': constants.OPTION_TAGS,
-            'no_confirmation': constants.OPTION_NO_CONFIRMATION,
-            'archive_folder': constants.OPTION_ARCHIVE_FOLDER,
-            'source_name': constants.OPTION_SOURCE_NAME,
-            'source_folder': constants.OPTION_SOURCE_FOLDER,
-        }
-    }
-)
+@jiig.task
 def prune(
     runtime: TzarRuntime,
     age_max: jiig.f.age(),
