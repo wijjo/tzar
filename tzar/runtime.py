@@ -28,8 +28,13 @@ from typing import Sequence, Iterator, Collection
 
 from jiig.runtime import Runtime
 from jiig.util.log import abort, log_error, log_message, log_warning
-from jiig.util.filesystem import create_folder, short_path, iterate_filtered_files, \
-    temporary_working_folder
+from jiig.util.filesystem import (
+    create_folder,
+    short_path,
+    iterate_filtered_files,
+    iterate_git_pending,
+    temporary_working_folder,
+)
 from jiig.util.text.human_units import format_human_byte_count
 from jiig.util.process import shell_command_string
 
@@ -134,10 +139,15 @@ class TzarRuntime(Runtime):
             if tags:
                 name_parts.extend(tags)
             full_folder_path = archive_folder / '_'.join(name_parts)
-            source_file_iterator = iterate_filtered_files(source_folder,
-                                                          pending=pending,
-                                                          gitignore=gitignore,
-                                                          excludes=excludes)
+            if pending:
+                source_file_iterator = iterate_git_pending(source_folder)
+                if gitignore or excludes:
+                    log_warning(f'When archiving Git pending files, the'
+                                f' gitignore and excludes options are ignored.')
+            else:
+                source_file_iterator = iterate_filtered_files(source_folder,
+                                                              gitignore=gitignore,
+                                                              excludes=excludes)
             if self.options.dry_run:
                 for path_idx, path in enumerate(source_file_iterator):
                     if path_idx == 0:
