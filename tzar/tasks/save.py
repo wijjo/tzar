@@ -28,7 +28,7 @@ from tzar.runtime import TzarRuntime
 @jiig.task
 def save(
     runtime: TzarRuntime,
-    exclude: jiig.f.text(repeat=(None, None)),
+    exclude: jiig.f.text(repeat=()),
     progress: jiig.f.boolean(),
     disable_timestamp: jiig.f.boolean(),
     gitignore: jiig.f.boolean(),
