@@ -16,65 +16,85 @@
 # You should have received a copy of the GNU General Public License
 # along with Tzar.  If not, see <https://www.gnu.org/licenses/>.
 
-[tool]
-name = "tzar"
-project = "Tzar"
-description = "Simple archive manager."
-notes = "Jiig-based tool to create and manage archives of the working folder."
-version = "0.5"
-author = "Steve Cooper"
-copyright = "2021-2023, Steve Cooper"
-runtime = "tzar.runtime"
-tasks_package = "tzar.tasks"
-
-[tasks.catalog.cli_options]
-long_format = "-l,--long"
-age_min = "--age-min"
-age_max = "--age-max"
-date_min = "--date-min"
-date_max = "--date-max"
-interval_min = "--interval-min"
-interval_max = "--interval-max"
-size_unit_binary = "--size-unit-binary"
-size_unit_decimal = "--size-unit-decimal"
-tags = "-t,--tags"
-archive_folder = "-f,--archive-folder"
-source_name = "-n,--name"
-source_folder = "-s,--source-folder"
-
-[tasks.compare.cli_options]
-source_folder = "-s,--source-folder"
-
-[tasks.delete]
-
-[tasks.list.cli_options]
-size_unit_binary = "--size-unit-binary"
-size_unit_decimal = "--size-unit-decimal"
-
-[tasks.prune.cli_options]
-age_min = "--age-min"
-age_max = "--age-max"
-date_min = "--date-min"
-date_max = "--date-max"
-interval_min = "--interval-min"
-interval_max = "--interval-max"
-size_unit_binary = "--size-unit-binary"
-size_unit_decimal = "--size-unit-decimal"
-tags = "-t,--tags"
-no_confirmation = "--no-confirmation"
-archive_folder = "-f,--archive-folder"
-source_name = "-n,--name"
-source_folder = "-s,--source-folder"
-
-[tasks.save.cli_options]
-exclude = "-e,--exclude"
-progress = "-p,--progress"
-disable_timestamp = "-T,--no-timestamp"
-gitignore = "--gitignore"
-keep_list = "--keep-list"
-pending = "--pending"
-tags = "-t,--tags"
-archive_folder = "-f,--archive-folder"
-source_name = "-n,--name"
-source_folder = "-s,--source-folder"
-method = "-m,--method"
+{
+  "tool": {
+    "name": "tzar",
+    "project": "Tzar",
+    "description": "Simple archive manager.",
+    "notes": "Jiig-based tool to create and manage archives of the working folder.",
+    "version": "0.5",
+    "author": "Steve Cooper",
+    "copyright": "2021-2023, Steve Cooper",
+    "runtime": "tzar.runtime",
+    "tasks_package": "tzar.tasks"
+  },
+  "tasks": {
+    "catalog": {
+      "cli_options": {
+        "long_format": "-l,--long",
+        "age_min": "--age-min",
+        "age_max": "--age-max",
+        "date_min": "--date-min",
+        "date_max": "--date-max",
+        "interval_min": "--interval-min",
+        "interval_max": "--interval-max",
+        "size_unit_binary": "--size-unit-binary",
+        "size_unit_decimal": "--size-unit-decimal",
+        "tags": "-t,--tags",
+        "archive_folder": "-f,--archive-folder",
+        "source_name": "-n,--name",
+        "source_folder": "-s,--source-folder"
+      }
+    },
+    "compare": {
+      "cli_options": {
+        "source_folder": "-s,--source-folder"
+      }
+    },
+    "delete": {},
+    "list": {
+      "cli_options": {
+        "size_unit_binary": "--size-unit-binary",
+        "size_unit_decimal": "--size-unit-decimal"
+      }
+    },
+    "prune": {
+      "cli_options": {
+        "age_min": "--age-min",
+        "age_max": "--age-max",
+        "date_min": "--date-min",
+        "date_max": "--date-max",
+        "interval_min": "--interval-min",
+        "interval_max": "--interval-max",
+        "size_unit_binary": "--size-unit-binary",
+        "size_unit_decimal": "--size-unit-decimal",
+        "tags": "-t,--tags",
+        "no_confirmation": "--no-confirmation",
+        "archive_folder": "-f,--archive-folder",
+        "source_name": "-n,--name",
+        "source_folder": "-s,--source-folder"
+      }
+    },
+    "save": {
+      "cli_options": {
+        "exclude": "-e,--exclude",
+        "progress": "-p,--progress",
+        "disable_timestamp": "-T,--no-timestamp",
+        "gitignore": "--gitignore",
+        "keep_list": "--keep-list",
+        "pending": "--pending",
+        "tags": "-t,--tags",
+        "archive_folder": "-f,--archive-folder",
+        "source_name": "-n,--name",
+        "source_folder": "-s,--source-folder",
+        "method": "-m,--method"
+      }
+    },
+    "__alias__": {
+      "visibility": 1
+    },
+    "__help__": {
+      "visibility": 1
+    }
+  }
+}
