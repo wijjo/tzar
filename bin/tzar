@@ -25,8 +25,7 @@
     "version": "0.5",
     "author": "Steve Cooper",
     "copyright": "2021-2023, Steve Cooper",
-    "runtime": "tzar.runtime",
-    "tasks_package": "tzar.tasks"
+    "runtime": "tzar.runtime"
   },
   "tasks": {
     "catalog": {
