@@ -19,13 +19,11 @@
 
 import jiig
 
-from tzar.runtime import TzarRuntime
-
 
 # noinspection PyUnusedLocal
 @jiig.task
 def delete(
-    runtime: TzarRuntime,
+    runtime: jiig.Runtime,
     archive_paths: jiig.f.filesystem_object(exists=True, repeat=(1, None)),
 ):
     """

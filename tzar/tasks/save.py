@@ -22,12 +22,17 @@ import os
 import jiig
 
 from tzar import constants
-from tzar.runtime import TzarRuntime
+from tzar.internal import (
+    METHOD_NAMES,
+    get_catalog_spec,
+    save_archive,
+)
 
 
+# noinspection PyUnusedLocal
 @jiig.task
 def save(
-    runtime: TzarRuntime,
+    runtime: jiig.Runtime,
     exclude: jiig.f.text(repeat=()),
     progress: jiig.f.boolean(),
     disable_timestamp: jiig.f.boolean(),
@@ -35,10 +40,10 @@ def save(
     keep_list: jiig.f.boolean(),
     pending: jiig.f.boolean(),
     tags: jiig.f.comma_list(),
-    archive_folder: jiig.f.filesystem_folder(absolute_path=True) = constants.DEFAULT_ARCHIVE_FOLDER,
-    source_name: jiig.f.text() = os.path.basename(os.getcwd()),
-    source_folder: jiig.f.filesystem_folder(absolute_path=True) = '.',
-    method: jiig.f.text(choices=TzarRuntime.get_method_names()) = constants.DEFAULT_METHOD,
+    archive_folder: jiig.f.filesystem_folder(absolute_path=True) = None,
+    source_name: jiig.f.text() = None,
+    source_folder: jiig.f.filesystem_folder(absolute_path=True) = None,
+    method: jiig.f.text(choices=METHOD_NAMES) = constants.DEFAULT_METHOD,
 ):
     """
     Save an archive of the working folder or another folder.
@@ -56,14 +61,12 @@ def save(
     :param source_folder: Source folder.
     :param method: Archive method.
     """
-    runtime.save_archive(source_folder,
-                         archive_folder,
-                         method,
-                         source_name=source_name,
-                         gitignore=gitignore,
-                         excludes=exclude,
-                         pending=pending,
-                         timestamp=not disable_timestamp,
-                         progress=progress,
-                         keep_list=keep_list,
-                         tags=tags)
+    save_archive(get_catalog_spec(source_folder, archive_folder, source_name),
+                 method,
+                 gitignore=gitignore,
+                 excludes=exclude,
+                 pending=pending,
+                 timestamp=not disable_timestamp,
+                 progress=progress,
+                 keep_list=keep_list,
+                 tags=tags)

@@ -18,75 +18,60 @@
 """Tzar catalog command."""
 
 import os
-from typing import Tuple, Text, Iterator
 
 import jiig
-from jiig.util.filesystem import short_path
+from jiig.util.filesystem import (
+    format_file_size,
+    short_path,
+)
 from jiig.util.text.table import format_table
 
-from tzar import constants
-from tzar.runtime import TzarRuntime, CatalogItem
-from tzar.utility import format_file_size
+from tzar.internal import (
+    get_catalog_spec,
+    list_catalog,
+)
 
 
 @jiig.task
 def catalog(
-    runtime: TzarRuntime,
-    long_format: jiig.f.boolean(),
+    runtime: jiig.Runtime,
     age_max: jiig.f.age(),
     age_min: jiig.f.age(),
     date_max: jiig.f.timestamp(),
     date_min: jiig.f.timestamp(),
     interval_max: jiig.f.interval(),
     interval_min: jiig.f.interval(),
-    size_unit_binary: jiig.f.boolean(),
-    size_unit_decimal: jiig.f.boolean(),
     tags: jiig.f.comma_list(),
-    archive_folder: jiig.f.filesystem_folder(absolute_path=True) = constants.DEFAULT_ARCHIVE_FOLDER,
+    unit_format: jiig.f.text(choices=('b', 'd')) = 'b',
+    archive_folder: jiig.f.filesystem_folder(absolute_path=True) = None,
     source_name: jiig.f.text() = os.path.basename(os.getcwd()),
     source_folder: jiig.f.filesystem_folder(absolute_path=True) = '.',
 ):
     """
-    Manage and view archive catalog folders.
+    List archive catalog folder.
 
     :param runtime: Jiig runtime API.
-    :param long_format: Long format to display extra information.
     :param age_max: Maximum archive age [^age_option].
     :param age_min: Minimum archive age [^age_option].
     :param date_max: Maximum (latest) archive date.
     :param date_min: Minimum (earliest) archive date.
     :param interval_max: Maximum interval (n[HMS]) between saves to consider.
     :param interval_min: Minimum interval (n[HMS]) between saves to consider.
-    :param size_unit_binary: Format size as binary 1024-based KiB, MiB, etc..
-    :param size_unit_decimal: Format size as decimal 1000-based KB, MB, etc..
     :param tags: Comma-separated archive tags.
+    :param unit_format: 'b' for KiB/MiB/... or 'd' for KB/MB/... (default: 'b')
     :param archive_folder: Archive folder.
     :param source_name: Source name.
     :param source_folder: Source folder.
     """
-    def _get_headers() -> Iterator[Text]:
-        yield 'date/time'
-        yield 'method'
-        yield 'tags'
-        if long_format:
-            yield 'size'
-            yield 'file/folder name'
-
-    def _get_columns(item: CatalogItem) -> Iterator[Text]:
-        yield item.time_string
-        yield item.method_name
-        yield ','.join(item.tags)
-        if long_format:
-            yield format_file_size(item.size,
-                                   size_unit_binary=size_unit_binary,
-                                   size_unit_decimal=size_unit_decimal)
-            yield short_path(item.path.name, is_folder=os.path.isdir(item.path))
-
-    def _get_rows() -> Iterator[Tuple[Text]]:
-        for item in runtime.list_catalog(
-                source_folder,
-                archive_folder,
-                source_name=source_name,
+    # Get full catalog spec based on user-provided one or default folder hierarchy.
+    catalog_spec = get_catalog_spec(source_folder, archive_folder, source_name)
+    with runtime.context(source_name=catalog_spec.source_name,
+                         archive_folder=catalog_spec.archive_folder,
+                         ) as context:
+        context.heading(1, '{source_name} archive catalog from "{archive_folder}"')
+        rows = []
+        for item in list_catalog(
+                catalog_spec,
                 date_min=date_min,
                 date_max=date_max,
                 age_min=age_min,
@@ -94,11 +79,15 @@ def catalog(
                 interval_min=interval_min,
                 interval_max=interval_max,
                 tags=tags):
-            yield list(_get_columns(item))
-
-    with runtime.context(source_name=source_name,
-                         archive_folder=archive_folder,
-                         ) as context:
-        context.heading(1, '{source_name} archive catalog from "{archive_folder}"')
-        for line in format_table(*_get_rows(), headers=list(_get_headers())):
+            date_time = item.time_string
+            method = item.method_name
+            tags = ','.join(item.tags)
+            size = format_file_size(item.size, unit_format=unit_format)
+            name = short_path(item.path.name, is_folder=os.path.isdir(item.path))
+            columns = [date_time, method, tags, size, name]
+            rows.append(columns)
+        for line in format_table(
+            *rows,
+            headers=['date/time', 'method', 'tags', 'size', 'file/folder name'],
+        ):
             print(line)

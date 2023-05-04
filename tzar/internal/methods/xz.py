@@ -16,71 +16,23 @@
 # along with Tzar.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Archive support base class.
+Support for XZ archives.
 """
 
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Sequence, Type
+from typing import Sequence
 
-from jiig.util.log import log_warning
-from jiig.util.filesystem import find_system_program
+from .base import (
+    ArchiveMethodBase,
+    MethodListItem,
+    MethodSaveData,
+    MethodSaveResult,
+)
 
-PV_INSTALLED = bool(find_system_program('pv'))
-PV_WARNED = False
-
-
-@dataclass
-class MethodSaveData:
-    """Input data for archive saving."""
-
-    source_path: Path
-    source_list_path: Path
-    archive_path: Path
-    verbose: bool
-    dry_run: bool
-    progress: bool
-    total_bytes: int
-    total_files: int
-    total_folders: int
-
-    @property
-    def pv_progress(self) -> bool:
-        """
-        Use instead of `progress` member when "pv" is required.
-
-        :return: True if progress is required and pv is available
-        """
-        if not self.progress:
-            return False
-        if not PV_INSTALLED:
-            global PV_WARNED
-            if not PV_WARNED:
-                log_warning('Please install the "pv" program in order'
-                            ' to use the progress option.')
-                PV_WARNED = True
-            return False
-        return True
+from .tarball import handle_tarball_save, handle_tarball_list, handle_tarball_get_name
 
 
-@dataclass
-class MethodSaveResult:
-    """Output data received after saving archive."""
-    archive_path: Path
-    command_arguments: list[str]
-
-
-@dataclass
-class MethodListItem:
-    """Data received for an archive file when listing archive contents."""
-    path: Path
-    time: float
-    # File size or None if it is a folder.
-    size: int | None
-
-
-class ArchiveMethodBase:
-    """Base archive method class."""
+class ArchiveMethodXZ(ArchiveMethodBase):
 
     @classmethod
     def handle_get_name(cls,
@@ -92,7 +44,7 @@ class ArchiveMethodBase:
         :param archive_name: archive file name
         :return: stripped name suitable for further parsing
         """
-        raise NotImplementedError
+        return handle_tarball_get_name(archive_name, extension='xz')
 
     @classmethod
     def handle_save(cls,
@@ -104,7 +56,7 @@ class ArchiveMethodBase:
         :param save_data: input parameters for save operation
         :return: save result data
         """
-        raise NotImplementedError
+        return handle_tarball_save(save_data, compressors=['pixz', 'xz'], extension='xz')
 
     @classmethod
     def handle_list(cls,
@@ -113,12 +65,10 @@ class ArchiveMethodBase:
         """
         Required override for listing archive contents.
 
-        Returned sequence may be unsorted, since it will be sorted later.
-
         :param archive_path: path of archive file or folder
         :return: sequence of item data objects, one per archived file
         """
-        raise NotImplementedError
+        return handle_tarball_list(archive_path, compression='xz')
 
     @classmethod
     def check_supported(cls,
@@ -132,11 +82,11 @@ class ArchiveMethodBase:
         :param assumed_type: For testing, 1=file, 2=folder, None=check physical object
         :return: base filename or path if it is handled or None if it is not
         """
-        raise NotImplementedError
-
-
-@dataclass
-class RegisteredMethod:
-    """Data for registered archive method."""
-    name: str
-    method_cls: Type[ArchiveMethodBase]
+        if assumed_type is None:
+            if not archive_path.is_file():
+                return None
+        elif assumed_type != 1:
+            return None
+        if not str(archive_path).endswith('.tar.xz'):
+            return None
+        return Path(str(archive_path)[:-7])

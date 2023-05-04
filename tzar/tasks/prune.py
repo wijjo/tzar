@@ -30,14 +30,16 @@ import os
 
 import jiig
 
-from tzar import constants
-from tzar.runtime import TzarRuntime
+from tzar.internal import (
+    get_catalog_spec,
+    list_catalog,
+)
 
 
 # noinspection PyUnusedLocal
 @jiig.task
 def prune(
-    runtime: TzarRuntime,
+    runtime: jiig.Runtime,
     age_max: jiig.f.age(),
     age_min: jiig.f.age(),
     date_max: jiig.f.timestamp(),
@@ -46,7 +48,7 @@ def prune(
     interval_min: jiig.f.interval(),
     tags: jiig.f.comma_list(),
     no_confirmation: jiig.f.boolean(),
-    archive_folder: jiig.f.filesystem_folder(absolute_path=True) = constants.DEFAULT_ARCHIVE_FOLDER,
+    archive_folder: jiig.f.filesystem_folder(absolute_path=True) = None,
     source_name: jiig.f.text() = os.path.basename(os.getcwd()),
     source_folder: jiig.f.filesystem_folder(absolute_path=True) = '.',
 ):
@@ -66,10 +68,8 @@ def prune(
     :param source_name: Source name.
     :param source_folder: Source folder.
     """
-    for item in runtime.list_catalog(
-            source_folder,
-            archive_folder,
-            source_name=source_name,
+    for item in list_catalog(
+            get_catalog_spec(source_folder, archive_folder, source_name),
             date_min=date_min,
             date_max=date_max,
             age_min=age_min,

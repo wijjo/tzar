@@ -18,7 +18,7 @@
 import re
 
 DEFAULT_METHOD = 'gz'
-DEFAULT_ARCHIVE_FOLDER = '../tzarchive'
+DEFAULT_ARCHIVE_FOLDER = '~/.tzar/archives'
 TIMESTAMP_FORMAT = '%Y%m%d-%H%M%S'
 TIMESTAMP_REGEX = re.compile(r'(?P<year>\d\d\d\d)'
                              r'(?P<month>\d\d)'

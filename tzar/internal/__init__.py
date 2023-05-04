@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2022, Steven Cooper
+# Copyright (C) 2021-2023, Steven Cooper
 #
 # This file is part of Tzar.
 #
@@ -15,20 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with Tzar.  If not, see <https://www.gnu.org/licenses/>.
 
-"""Archive support package."""
-
-from typing import Text, Dict, Type
-
-from tzar.archive_method import ArchiveMethodBase
-
-from .files import ArchiveMethodSync
-from .gz import ArchiveMethodGZ
-from .xz import ArchiveMethodXZ
-from .zip import ArchiveMethodZip
-
-METHOD_MAP: Dict[Text, Type[ArchiveMethodBase]] = {
-    'files': ArchiveMethodSync,
-    'gz': ArchiveMethodGZ,
-    'xz': ArchiveMethodXZ,
-    'zip': ArchiveMethodZip,
-}
+from .archive import (
+    DiscoveredArchive,
+    METHOD_MAP,
+    METHOD_NAMES,
+    MethodListItem,
+    list_archive,
+    save_archive,
+)
+from .catalog import (
+    CatalogItem,
+    build_catalog_list,
+    get_catalog_spec,
+    list_catalog,
+)

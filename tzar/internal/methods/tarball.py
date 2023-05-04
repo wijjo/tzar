@@ -26,7 +26,11 @@ from typing import Sequence
 from jiig.util.filesystem import choose_program_alternative
 from jiig.util.collections import make_list
 
-from tzar.archive_method import MethodSaveData, MethodSaveResult, MethodListItem
+from .base import (
+    MethodListItem,
+    MethodSaveData,
+    MethodSaveResult,
+)
 
 
 def handle_tarball_save(save_data: MethodSaveData,

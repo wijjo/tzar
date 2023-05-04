@@ -15,23 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with Tzar.  If not, see <https://www.gnu.org/licenses/>.
 
-"""Tzar compare command."""
+"""Archive support package."""
 
-import jiig
-
-
-# noinspection PyUnusedLocal
-@jiig.task
-def compare(
-    runtime: jiig.Runtime,
-    archive_path: jiig.f.filesystem_object(exists=True),
-    source_folder: jiig.f.filesystem_folder(absolute_path=True) = '.',
-):
-    """
-    Compare archive to existing files.
-
-    :param runtime: Jiig runtime API.
-    :param archive_path: Path to source archive file or folder.
-    :param source_folder: Source folder.
-    """
-    raise NotImplementedError
+from .base import (
+    ArchiveMethodBase,
+    MethodListItem,
+    MethodSaveData,
+    MethodSaveResult,
+)
+from .files import ArchiveMethodSync
+from .gz import ArchiveMethodGZ
+from .xz import ArchiveMethodXZ
+from .zip import ArchiveMethodZip

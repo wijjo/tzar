@@ -22,7 +22,12 @@ Support for GZ archives.
 from pathlib import Path
 from typing import Sequence
 
-from tzar.archive_method import MethodSaveData, ArchiveMethodBase, MethodSaveResult, MethodListItem
+from .base import (
+    ArchiveMethodBase,
+    MethodListItem,
+    MethodSaveData,
+    MethodSaveResult,
+)
 
 from .tarball import handle_tarball_save, handle_tarball_list, handle_tarball_get_name
 

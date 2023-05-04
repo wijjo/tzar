@@ -24,21 +24,18 @@
     "notes": "Jiig-based tool to create and manage archives of the working folder.",
     "version": "0.5",
     "author": "Steve Cooper",
-    "copyright": "2021-2023, Steve Cooper",
-    "runtime": "tzar.runtime"
+    "copyright": "2021-2023, Steve Cooper"
   },
   "tasks": {
     "catalog": {
       "cli_options": {
-        "long_format": "-l,--long",
         "age_min": "--age-min",
         "age_max": "--age-max",
         "date_min": "--date-min",
         "date_max": "--date-max",
         "interval_min": "--interval-min",
         "interval_max": "--interval-max",
-        "size_unit_binary": "--size-unit-binary",
-        "size_unit_decimal": "--size-unit-decimal",
+        "unit_format": "--unit-format",
         "tags": "-t,--tags",
         "archive_folder": "-f,--archive-folder",
         "source_name": "-n,--name",
@@ -51,12 +48,6 @@
       }
     },
     "delete": {},
-    "list": {
-      "cli_options": {
-        "size_unit_binary": "--size-unit-binary",
-        "size_unit_decimal": "--size-unit-decimal"
-      }
-    },
     "prune": {
       "cli_options": {
         "age_min": "--age-min",
@@ -65,8 +56,6 @@
         "date_max": "--date-max",
         "interval_min": "--interval-min",
         "interval_max": "--interval-max",
-        "size_unit_binary": "--size-unit-binary",
-        "size_unit_decimal": "--size-unit-decimal",
         "tags": "-t,--tags",
         "no_confirmation": "--no-confirmation",
         "archive_folder": "-f,--archive-folder",

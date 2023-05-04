@@ -16,18 +16,23 @@
 # along with Tzar.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Support for XZ archives.
+Support for Zip archives.
 """
 
+import zipfile
 from pathlib import Path
+from time import mktime
 from typing import Sequence
 
-from tzar.archive_method import MethodSaveData, ArchiveMethodBase, MethodSaveResult, MethodListItem
+from .base import (
+    ArchiveMethodBase,
+    MethodListItem,
+    MethodSaveData,
+    MethodSaveResult,
+)
 
-from .tarball import handle_tarball_save, handle_tarball_list, handle_tarball_get_name
 
-
-class ArchiveMethodXZ(ArchiveMethodBase):
+class ArchiveMethodZip(ArchiveMethodBase):
 
     @classmethod
     def handle_get_name(cls,
@@ -39,7 +44,9 @@ class ArchiveMethodXZ(ArchiveMethodBase):
         :param archive_name: archive file name
         :return: stripped name suitable for further parsing
         """
-        return handle_tarball_get_name(archive_name, extension='xz')
+        if archive_name.endswith('.zip'):
+            return archive_name[:-4]
+        return archive_name
 
     @classmethod
     def handle_save(cls,
@@ -51,7 +58,14 @@ class ArchiveMethodXZ(ArchiveMethodBase):
         :param save_data: input parameters for save operation
         :return: save result data
         """
-        return handle_tarball_save(save_data, compressors=['pixz', 'xz'], extension='xz')
+        cmd_args = ['zip', '-r', '-', '.', f'-i@{save_data.source_list_path}']
+        if not save_data.verbose:
+            cmd_args.append('-q')
+        if save_data.pv_progress:
+            cmd_args.extend(['|', 'pv', '-bret'])
+        zip_path = Path(str(save_data.archive_path) + '.zip')
+        cmd_args.extend(['>', str(zip_path)])
+        return MethodSaveResult(archive_path=zip_path, command_arguments=cmd_args)
 
     @classmethod
     def handle_list(cls,
@@ -61,9 +75,13 @@ class ArchiveMethodXZ(ArchiveMethodBase):
         Required override for listing archive contents.
 
         :param archive_path: path of archive file or folder
-        :return: sequence of item data objects, one per archived file
+        :return: sequence of archive items
         """
-        return handle_tarball_list(archive_path, compression='xz')
+        with zipfile.ZipFile(archive_path, compression=zipfile.ZIP_DEFLATED) as zip_file:
+            for info in zip_file.infolist():
+                file_size = info.file_size if not info.is_dir() else None
+                file_time = mktime(info.date_time + (0, 0, -1))
+                yield MethodListItem(path=Path(info.filename), time=file_time, size=file_size)
 
     @classmethod
     def check_supported(cls,
@@ -82,6 +100,6 @@ class ArchiveMethodXZ(ArchiveMethodBase):
                 return None
         elif assumed_type != 1:
             return None
-        if not str(archive_path).endswith('.tar.xz'):
+        if not str(archive_path).endswith('.zip'):
             return None
-        return Path(str(archive_path)[:-7])
+        return Path(str(archive_path)[:-4])
