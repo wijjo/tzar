@@ -15,20 +15,34 @@
 # You should have received a copy of the GNU General Public License
 # along with Tzar.  If not, see <https://www.gnu.org/licenses/>.
 
+import re
 from pathlib import Path
 from time import strptime, mktime
 import unittest
 
+import jiig
+
 from tzar.internal import (
     DiscoveredArchive,
     build_catalog_list,
+    get_timestamp_matcher,
 )
+
+
+class TestData:
+    pass
 
 
 class TestCatalog(unittest.TestCase):
 
-    @staticmethod
-    def assertList(names: list[str],
+    timestamp_format = '%Y%m%d-%H%M%S'
+
+    def setUp(self):
+        self.runtime = jiig.TestRuntime(Path(__file__).parent.parent)
+        self.timestamp_matcher = get_timestamp_matcher(self.timestamp_format)
+
+    def assertList(self,
+                   names: list[str],
                    expected: list[str],
                    time_min: str = None,
                    time_max: str = None,
@@ -38,18 +52,18 @@ class TestCatalog(unittest.TestCase):
         archives: list[DiscoveredArchive] = []
         for name in names:
             if name.endswith('/'):
-                archives.append(new_fake_folder(
+                archives.append(self.new_fake_folder(
                     f'/my/archives/{name[:-1]}', file_time=0.0))
             else:
-                archives.append(new_fake_file(
+                archives.append(self.new_fake_file(
                     f'/my/archives/{name}', file_size=0, file_time=0.0))
         filter_tag_set = set(tags.split(',')) if tags else None
         if time_min:
-            timestamp_min = mktime(strptime(time_min, '%Y%m%d-%H%M%S'))
+            timestamp_min = mktime(strptime(time_min, self.timestamp_format))
         else:
             timestamp_min = None
         if time_max:
-            timestamp_max = mktime(strptime(time_max, '%Y%m%d-%H%M%S'))
+            timestamp_max = mktime(strptime(time_max, self.timestamp_format))
         else:
             timestamp_max = None
         items = build_catalog_list(archives,
@@ -159,48 +173,50 @@ class TestCatalog(unittest.TestCase):
 
         )
 
+    def new_fake_file(self,
+                      path: str | Path,
+                      file_size: int,
+                      file_time: float,
+                      ) -> DiscoveredArchive:
+        """
+        Create DiscoveredArchive for fake file.
 
-def new_fake_file(path: str | Path,
-                  file_size: int,
-                  file_time: float,
-                  ) -> DiscoveredArchive:
-    """
-    Create DiscoveredArchive for fake file.
+        :param path: path to archive file or folder
+        :param file_size: size in bytes
+        :param file_time: time as float seconds
+        :return: DiscoveredArchive instance.
+        :raise ValueError: when the input is not a valid archive
+        """
+        if not isinstance(path, Path):
+            path = Path(path)
+        registered_method = DiscoveredArchive.get_method(path, assumed_type=1)
+        assert registered_method is not None
+        return DiscoveredArchive(path=path,
+                                 file_time=file_time,
+                                 file_size=file_size,
+                                 method_name=registered_method.name,
+                                 method_cls=registered_method.method_cls,
+                                 timestamp_matcher=self.timestamp_matcher)
 
-    :param path: path to archive file or folder
-    :param file_size: size in bytes
-    :param file_time: time as float seconds
-    :return: DiscoveredArchive instance.
-    :raise ValueError: when the input is not a valid archive
-    """
-    if not isinstance(path, Path):
-        path = Path(path)
-    registered_method = DiscoveredArchive.get_method(path, assumed_type=1)
-    assert registered_method is not None
-    return DiscoveredArchive(path=path,
-                             file_time=file_time,
-                             file_size=file_size,
-                             method_name=registered_method.name,
-                             method_cls=registered_method.method_cls)
+    def new_fake_folder(self,
+                        path: str | Path,
+                        file_time: float,
+                        ) -> DiscoveredArchive:
+        """
+        Create DiscoveredArchive for fake folder.
 
-
-def new_fake_folder(path: str | Path,
-                    file_time: float,
-                    ) -> DiscoveredArchive:
-    """
-    Create DiscoveredArchive for fake folder.
-
-    :param path: path to archive file or folder
-    :param file_time: time as float seconds
-    :return: DiscoveredArchive instance.
-    :raise ValueError: when the input is not a valid archive
-    """
-    if not isinstance(path, Path):
-        path = Path(path)
-    registered_method = DiscoveredArchive.get_method(path, assumed_type=2)
-    assert registered_method is not None
-    return DiscoveredArchive(path=path,
-                             file_time=file_time,
-                             file_size=0,
-                             method_name=registered_method.name,
-                             method_cls=registered_method.method_cls)
+        :param path: path to archive file or folder
+        :param file_time: time as float seconds
+        :return: DiscoveredArchive instance.
+        :raise ValueError: when the input is not a valid archive
+        """
+        if not isinstance(path, Path):
+            path = Path(path)
+        registered_method = DiscoveredArchive.get_method(path, assumed_type=2)
+        assert registered_method is not None
+        return DiscoveredArchive(path=path,
+                                 file_time=file_time,
+                                 file_size=0,
+                                 method_name=registered_method.name,
+                                 method_cls=registered_method.method_cls,
+                                 timestamp_matcher=self.timestamp_matcher)

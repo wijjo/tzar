@@ -20,12 +20,14 @@ from .archive import (
     METHOD_MAP,
     METHOD_NAMES,
     MethodListItem,
+    get_timestamp_matcher,
     list_archive,
     save_archive,
 )
 from .catalog import (
     CatalogItem,
     build_catalog_list,
+    format_catalog_table,
     get_catalog_spec,
     list_catalog,
 )

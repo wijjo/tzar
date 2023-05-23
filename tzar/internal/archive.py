@@ -16,6 +16,8 @@
 # along with Tzar.  If not, see <https://www.gnu.org/licenses/>.
 
 import os
+import re
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from tempfile import NamedTemporaryFile
@@ -29,6 +31,7 @@ from typing import (
     Type,
 )
 
+from jiig import Runtime
 from jiig.util.filesystem import (
     create_folder,
     iterate_filtered_files,
@@ -43,11 +46,6 @@ from jiig.util.log import (
 )
 from jiig.util.process import shell_command_string
 from jiig.util.text.human_units import format_human_byte_count
-
-from tzar.constants import (
-    TIMESTAMP_FORMAT,
-    TIMESTAMP_REGEX,
-)
 
 from .methods import (
     ArchiveMethodBase,
@@ -92,14 +90,34 @@ class RegisteredMethod:
     method_cls: Type[ArchiveMethodBase]
 
 
-@dataclass
 class DiscoveredArchive:
-    path: Path
-    file_time: float
-    file_size: int
-    method_name: str
-    method_cls: Type[ArchiveMethodBase]
-    _archive_name_data: ArchiveNameData | None = None
+
+    def __init__(
+        self,
+        path: Path,
+        file_time: float,
+        file_size: int,
+        method_name: str,
+        method_cls: Type[ArchiveMethodBase],
+        timestamp_matcher: re.Pattern,
+    ):
+        """
+        Discovered archive constructor
+
+        :param path: path to archive file or folder
+        :param file_time: file time
+        :param file_size: file size
+        :param method_name: archive method name
+        :param method_cls: archive method class
+        :param timestamp_matcher: regular expression for parsing file name timestamps
+        """
+        self.path = path
+        self.file_time = file_time
+        self.file_size = file_size
+        self.method_name = method_name
+        self.method_cls = method_cls
+        self.timestamp_matcher = timestamp_matcher
+        self._archive_name_data: ArchiveNameData | None = None
 
     @property
     def archive_name(self) -> str:
@@ -114,15 +132,20 @@ class DiscoveredArchive:
             tags: list[str] = []
             time_stamp: float | None = None
             if len(name_parts) >= 2:
-                timestamp_matched = TIMESTAMP_REGEX.match(name_parts[1])
+                timestamp_matched = self.timestamp_matcher.match(name_parts[1])
                 if timestamp_matched:
+                    current_time = time.localtime()
+                    groups = timestamp_matched.groupdict()
+                    year = int(groups.get('year', current_time.tm_year))
+                    if year < 100:
+                        year += (current_time.tm_year % 100) * 100
                     time_stamp = mktime((
-                        int(timestamp_matched.group('year')),
-                        int(timestamp_matched.group('month')),
-                        int(timestamp_matched.group('day')),
-                        int(timestamp_matched.group('hours')),
-                        int(timestamp_matched.group('minutes')),
-                        int(timestamp_matched.group('seconds')),
+                        year,
+                        int(groups.get('month', current_time.tm_mon)),
+                        int(groups.get('day', current_time.tm_mday)),
+                        int(groups.get('hours', current_time.tm_hour)),
+                        int(groups.get('minutes', current_time.tm_min)),
+                        int(groups.get('seconds', current_time.tm_sec)),
                         0, 0, -1))
                     # Handles both comma and underscore-separated tags.
                     raw_tags = ','.join(name_parts[2:])
@@ -167,11 +190,13 @@ class DiscoveredArchive:
     @classmethod
     def get(cls,
             path: str | Path,
+            timestamp_matcher: re.Pattern,
             ) -> Self | None:
         """
         Create DiscoveredArchive for physical file or folder.
 
         :param path: path to archive file or folder
+        :param timestamp_matcher: regular expression for parsing file name timestamps
         :return: DiscoveredArchive instance.
         :raise ValueError: when the input is not a valid archive
         """
@@ -185,19 +210,23 @@ class DiscoveredArchive:
                    file_time=file_stat.st_mtime,
                    file_size=file_stat.st_size,
                    method_name=registered_method.name,
-                   method_cls=registered_method.method_cls)
+                   method_cls=registered_method.method_cls,
+                   timestamp_matcher=timestamp_matcher)
 
 
-def list_archive(archive_path: str | Path,
+def list_archive(runtime: Runtime,
+                 archive_path: str | Path,
                  ) -> Sequence[MethodListItem]:
     """
     List tarball contents.
 
+    :param runtime: Jiig runtime API.
     :param archive_path: archive tarball file path
     :return: sequence of archive items
     """
+    timestamp_matcher = get_timestamp_matcher(str(runtime.get_param('timestamp_format')))
     try:
-        discovered_archive = DiscoveredArchive.get(archive_path)
+        discovered_archive = DiscoveredArchive.get(archive_path, timestamp_matcher)
         if discovered_archive is None:
             abort(f'Unsupported archive: {archive_path}')
         return discovered_archive.method_cls().handle_list(archive_path)
@@ -205,7 +234,8 @@ def list_archive(archive_path: str | Path,
         abort(exc)
 
 
-def save_archive(catalog_spec: CatalogSpec,
+def save_archive(runtime: Runtime,
+                 catalog_spec: CatalogSpec,
                  method_name: str,
                  tags: str = None,
                  pending: bool = False,
@@ -214,11 +244,13 @@ def save_archive(catalog_spec: CatalogSpec,
                  timestamp: bool = False,
                  progress: bool = False,
                  keep_list: bool = False,
-                 dry_run: bool = False,
-                 verbose: bool = False):
+                 dry_run: bool = None,
+                 verbose: bool = None,
+                 ):
     """
     Save an archive of a source folder.
 
+    :param runtime: Jiig runtime API.
     :param catalog_spec: source folder, archive folder, and source name
     :param method_name: archive method name
     :param tags: optional tags to assign to archive (added to file name)
@@ -231,6 +263,11 @@ def save_archive(catalog_spec: CatalogSpec,
     :param dry_run: avoid destructive actions if True
     :param verbose: display extra messages if True
     """
+    if dry_run is None:
+        dry_run = runtime.options.dry_run
+    if verbose is None:
+        verbose = runtime.options.verbose
+    timestamp_format = str(runtime.get_param('timestamp_format'))
     method_cls = METHOD_MAP.get(method_name)
     if not method_cls:
         raise RuntimeError(f'Bad archive method name "{method_name}".')
@@ -239,7 +276,7 @@ def save_archive(catalog_spec: CatalogSpec,
     with temporary_working_folder(catalog_spec.source_folder):
         name_parts = [catalog_spec.source_name]
         if timestamp:
-            name_parts.append(strftime(TIMESTAMP_FORMAT))
+            name_parts.append(strftime(timestamp_format))
         if tags:
             name_parts.extend(tags)
         full_folder_path = catalog_spec.archive_folder / '_'.join(name_parts)
@@ -313,3 +350,21 @@ def save_archive(catalog_spec: CatalogSpec,
             ret_code = os.system(full_command)
             if ret_code != 0:
                 abort('Archive command failed.', full_command)
+
+
+def get_timestamp_matcher(timestamp_format: str) -> re.Pattern:
+    """Produce compiled regular expression for parsing timestamp strings.
+
+    :param timestamp_format: timestamp format string
+    :return: compiled regular expression for parsing timestamps
+    """
+    return re.compile(
+        timestamp_format.replace(
+            '%Y', r'(?P<year>\d\d\d\d)').replace(
+            '%y', r'(?P<year>\d\d)').replace(
+            '%m', r'(?P<month>\d\d)').replace(
+            '%d', r'(?P<day>\d\d)').replace(
+            '%H', r'(?P<hours>\d\d)').replace(
+            '%M', r'(?P<minutes>\d\d)').replace(
+            '%S', r'(?P<seconds>\d\d)')
+    )

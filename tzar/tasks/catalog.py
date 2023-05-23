@@ -20,13 +20,9 @@
 import os
 
 import jiig
-from jiig.util.filesystem import (
-    format_file_size,
-    short_path,
-)
-from jiig.util.text.table import format_table
 
 from tzar.internal import (
+    format_catalog_table,
     get_catalog_spec,
     list_catalog,
 )
@@ -64,13 +60,14 @@ def catalog(
     :param source_folder: Source folder.
     """
     # Get full catalog spec based on user-provided one or default folder hierarchy.
-    catalog_spec = get_catalog_spec(source_folder, archive_folder, source_name)
+    catalog_spec = get_catalog_spec(runtime, source_folder, archive_folder, source_name)
     with runtime.context(source_name=catalog_spec.source_name,
                          archive_folder=catalog_spec.archive_folder,
                          ) as context:
         context.heading(1, '{source_name} archive catalog from "{archive_folder}"')
-        rows = []
-        for item in list_catalog(
+        for line in format_catalog_table(
+            list_catalog(
+                runtime,
                 catalog_spec,
                 date_min=date_min,
                 date_max=date_max,
@@ -78,16 +75,8 @@ def catalog(
                 age_max=age_max,
                 interval_min=interval_min,
                 interval_max=interval_max,
-                tags=tags):
-            date_time = item.time_string
-            method = item.method_name
-            tags = ','.join(item.tags)
-            size = format_file_size(item.size, unit_format=unit_format)
-            name = short_path(item.path.name, is_folder=os.path.isdir(item.path))
-            columns = [date_time, method, tags, size, name]
-            rows.append(columns)
-        for line in format_table(
-            *rows,
-            headers=['date/time', 'method', 'tags', 'size', 'file/folder name'],
+                tags=tags,
+            ),
+            unit_format=unit_format,
         ):
             print(line)

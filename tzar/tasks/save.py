@@ -17,11 +17,8 @@
 
 """Tzar save command."""
 
-import os
-
 import jiig
 
-from tzar import constants
 from tzar.internal import (
     METHOD_NAMES,
     get_catalog_spec,
@@ -29,7 +26,6 @@ from tzar.internal import (
 )
 
 
-# noinspection PyUnusedLocal
 @jiig.task
 def save(
     runtime: jiig.Runtime,
@@ -43,7 +39,7 @@ def save(
     archive_folder: jiig.f.filesystem_folder(absolute_path=True) = None,
     source_name: jiig.f.text() = None,
     source_folder: jiig.f.filesystem_folder(absolute_path=True) = None,
-    method: jiig.f.text(choices=METHOD_NAMES) = constants.DEFAULT_METHOD,
+    method: jiig.f.text(choices=METHOD_NAMES) = None,
 ):
     """
     Save an archive of the working folder or another folder.
@@ -61,10 +57,16 @@ def save(
     :param source_folder: Source folder.
     :param method: Archive method.
     """
-    save_archive(get_catalog_spec(source_folder, archive_folder, source_name),
+    if method is None:
+        method = str(runtime.get_param('method'))
+    excludes: list[str] = runtime.get_param('exclusions')
+    if exclude:
+        excludes.extend(exclude)
+    save_archive(runtime,
+                 get_catalog_spec(runtime, source_folder, archive_folder, source_name),
                  method,
                  gitignore=gitignore,
-                 excludes=exclude,
+                 excludes=excludes,
                  pending=pending,
                  timestamp=not disable_timestamp,
                  progress=progress,

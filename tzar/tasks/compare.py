@@ -20,18 +20,17 @@
 import jiig
 
 
-# noinspection PyUnusedLocal
 @jiig.task
 def compare(
-    runtime: jiig.Runtime,
-    archive_path: jiig.f.filesystem_object(exists=True),
-    source_folder: jiig.f.filesystem_folder(absolute_path=True) = '.',
+    _runtime: jiig.Runtime,
+    _archive_path: jiig.f.filesystem_object(exists=True),
+    _source_folder: jiig.f.filesystem_folder(absolute_path=True) = '.',
 ):
     """
     Compare archive to existing files.
 
-    :param runtime: Jiig runtime API.
-    :param archive_path: Path to source archive file or folder.
-    :param source_folder: Source folder.
+    :param _runtime: Jiig runtime API.
+    :param _archive_path: Path to source archive file or folder.
+    :param _source_folder: Source folder.
     """
     raise NotImplementedError

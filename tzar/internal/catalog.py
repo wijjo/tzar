@@ -14,6 +14,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Tzar.  If not, see <https://www.gnu.org/licenses/>.
+
+"""Catalog utility functions and classes."""
+
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -22,15 +25,24 @@ from time import (
     struct_time,
     localtime,
 )
-from typing import Collection
+from typing import (
+    Collection,
+    Iterable,
+    Iterator,
+)
 
+from jiig import Runtime
+from jiig.util.filesystem import (
+    format_file_size,
+    short_path,
+)
 from jiig.util.log import log_error
-
-from tzar.constants import DEFAULT_ARCHIVE_FOLDER
+from jiig.util.text.table import format_table
 
 from .archive import (
     CatalogSpec,
     DiscoveredArchive,
+    get_timestamp_matcher,
 )
 
 
@@ -51,8 +63,13 @@ class CatalogItem:
     def time_string(self) -> str:
         return strftime('%Y-%m-%d %H:%M.%S', self.time_struct)
 
+    @property
+    def display_name(self) -> str:
+        return short_path(self.path.name, is_folder=os.path.isdir(self.path))
 
-def get_catalog_spec(source_folder: str | Path,
+
+def get_catalog_spec(runtime: Runtime,
+                     source_folder: str | Path,
                      archive_folder: str | Path = None,
                      source_name: str = None,
                      ) -> CatalogSpec:
@@ -62,11 +79,13 @@ def get_catalog_spec(source_folder: str | Path,
     If the default folder is provided, calculates a nested path within it based
     on the working folder.
 
+    :param runtime: Jiig runtime API.
     :param source_folder: source folder path
     :param archive_folder: archive folder path (default: tzar catalog sub-folder)
     :param source_name: Source name (default: source folder name).
     :return: archive folder path
     """
+    default_archive_folder = str(runtime.get_param('archive_folder'))
     if isinstance(source_folder, str):
         source_folder = Path(source_folder)
     elif source_folder is None:
@@ -81,13 +100,14 @@ def get_catalog_spec(source_folder: str | Path,
             sub_path = source_folder.relative_to(home_path)
         else:
             sub_path = Path('__ROOT__') / source_folder
-        archive_folder = Path(DEFAULT_ARCHIVE_FOLDER).expanduser() / sub_path
+        archive_folder = Path(default_archive_folder).expanduser() / sub_path
     if source_name is None:
         source_name = archive_folder.name
     return CatalogSpec(source_folder, archive_folder, source_name)
 
 
-def list_catalog(catalog_spec: CatalogSpec,
+def list_catalog(runtime: Runtime,
+                 catalog_spec: CatalogSpec,
                  date_min: float = None,
                  date_max: float = None,
                  age_min: float = None,
@@ -99,6 +119,7 @@ def list_catalog(catalog_spec: CatalogSpec,
     """
     List catalog archives.
 
+    :param runtime: Jiig runtime API.
     :param catalog_spec: source folder, archive folder, and source name
     :param date_min: timestamp based on minimum date
     :param date_max: timestamp based on maximum date
@@ -109,6 +130,7 @@ def list_catalog(catalog_spec: CatalogSpec,
     :param tags: optional tags for filtering catalog archives (all are required)
     :return: found catalog items
     """
+    timestamp_matcher = get_timestamp_matcher(str(runtime.get_param('timestamp_format')))
     timestamp_min = max(filter(lambda ts: ts is not None, (date_min, age_max)),
                         default=None)
     timestamp_max = min(filter(lambda ts: ts is not None, (date_max, age_min)),
@@ -122,7 +144,7 @@ def list_catalog(catalog_spec: CatalogSpec,
     discovered_archives: list[DiscoveredArchive] = []
     for path in catalog_spec.archive_folder.glob('*'):
         try:
-            discovered_archive = DiscoveredArchive.get(path)
+            discovered_archive = DiscoveredArchive.get(path, timestamp_matcher)
             if discovered_archive is not None:
                 discovered_archives.append(discovered_archive)
         except ValueError as exc:
@@ -160,7 +182,7 @@ def build_catalog_list(archives: list[DiscoveredArchive],
     :param interval_min: minimum seconds between archive saves (ignored if smaller)
     :param interval_max: maximum seconds between archive saves (ignored if larger)
     :param filter_tag_set: optional required tags
-    :return:
+    :return: catalog item list
     """
     items: list[CatalogItem] = []
     for archive in archives:
@@ -185,3 +207,38 @@ def build_catalog_list(archives: list[DiscoveredArchive],
                     filtered_items.append(item)
             items = filtered_items
     return items
+
+
+def format_catalog_table(items: Iterable[CatalogItem],
+                         unit_format: str = 'b',
+                         flagged_names: Iterable[str] = None,
+                         flag_text: str = None,
+                         ) -> Iterator[str]:
+    """
+    Format catalog item table for listing.
+
+    :param items: catalog items
+    :param unit_format: 'b' for KiB/MiB/... or 'd' for KB/MB/... (default: 'b')
+    :param flagged_names: optional display names to flag (default: no flagged items)
+    :param flag_text: optional flag text (default: '*')
+    :return: text line iterator
+    """
+    if flag_text is None:
+        flag_text = '*'
+    headers = ['date/time', 'method', 'tags', 'size', 'archive name']
+    item_list = list(items)
+    rows = [
+        (
+            item.time_string,
+            item.method_name,
+            ','.join(item.tags),
+            format_file_size(item.size, unit_format=unit_format),
+            item.display_name,
+        )
+        for item in items
+    ]
+    for idx, line in enumerate(format_table(*rows, headers=headers)):
+        # Account for 2 heading lines.
+        if idx >= 2 and flagged_names and item_list[idx-2].display_name in flagged_names:
+            line += f'  {flag_text}'
+        yield line

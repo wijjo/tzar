@@ -26,6 +26,24 @@
     "author": "Steve Cooper",
     "copyright": "2021-2023, Steve Cooper"
   },
+  "params": {
+    "archive_folder": {
+      "value": "~/.tzar/archives",
+      "comment": "base archive folder location"
+    },
+    "exclusions": {
+      "value": ["__pycache__", "*.pyc", "*.pyo", "*.o"],
+      "comment": "file/folder exclusion patterns"
+    },
+    "method": {
+      "value": "gz",
+      "comment": "archive method: gz, xz, zip, or files"
+    },
+    "timestamp_format": {
+      "value": "%Y%m%d-%H%M%S",
+      "comment": "archive timestamp format (strftime-style)"
+    }
+  },
   "tasks": {
     "catalog": {
       "cli_options": {
@@ -42,12 +60,6 @@
         "source_folder": "-s,--source-folder"
       }
     },
-    "compare": {
-      "cli_options": {
-        "source_folder": "-s,--source-folder"
-      }
-    },
-    "delete": {},
     "prune": {
       "cli_options": {
         "age_min": "--age-min",
@@ -83,6 +95,12 @@
     },
     "__help__": {
       "visibility": 1
+    },
+    "__param__": {
+      "visibility": 1
+    },
+    "__unittest__": {
+      "visibility": 2
     }
   }
 }
